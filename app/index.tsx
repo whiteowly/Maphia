@@ -1,4 +1,6 @@
+
 import { ImageBackground, StyleSheet, Text } from "react-native";
+
 
 const backgroundImage= require("../assets/images/background.jpeg");
 
@@ -24,5 +26,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 30,
     fontWeight: "bold",
+    fontFamily: "GruesomeRegular",
   },
 });
