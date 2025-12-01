@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderColor: 'rgba(255, 0, 0, 0.2)', // Light red border around the whole element
     borderWidth: 1,
-    marginTop: 10,
+    marginTop: 4,
   },
 
   // Code Area (J27FX)

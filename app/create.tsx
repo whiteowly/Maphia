@@ -18,14 +18,14 @@ export default function Create() {
             <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30,  alignSelf: 'center', textAlign: 'center'  }}>Maphia</Text>
            <View style={styles.container}>
             <View style={styles.cardContainer} >
-                 <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 10, alignSelf: 'flex-start' }}>Game rules</Text>
+                 <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 4, alignSelf: 'flex-start' }}>Game rules</Text>
                 <View style={styles.contentRow}>
                        <SliderComponent initialValue={7} />
                           <SliderMafia initialValue={2} />
                       </View>
                        <View style={styles.contentRow}>
-                        <Text style={{ fontFamily: 'Gruesome', fontSize: 17, color: 'white', marginLeft: 10, marginTop:20 }}>Join Settings</Text>
-                        <Text style={{ fontFamily: 'Gruesome', fontSize: 17, color: 'white', marginLeft: 30, marginTop:20 }}>Discussion Time(min)</Text>
+                        <Text style={{ fontFamily: 'Gruesome', fontSize: 18, color: 'white', marginLeft: 10, marginTop:20 }}>Join Settings</Text>
+                        <Text style={{ fontFamily: 'Gruesome', fontSize: 18, color: 'white', marginLeft: 30, marginTop:20 }}>Discussion Time(min)</Text>
                       </View>
                       <View style={styles.contentRow}>
                         <RoomCodeShare code="J27FX" />
@@ -36,22 +36,24 @@ export default function Create() {
             <View style={styles.cardContainer1} >
                  <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 5, alignSelf: 'flex-start' }}>Roles</Text>
                 <View style={styles.contentColumn}>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 17, color: 'white', marginLeft: 10, marginTop:20 }}>7 Players</Text>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 17, color: 'white', marginLeft: 10, marginTop:20 }}>2 Maphias</Text>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 17, color: 'white', marginLeft: 10, marginTop:20 }}>5 Civilians</Text>
+                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop:20 }}>7 Players</Text>
+                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop:20 }}>2 Maphias</Text>
+                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop:20 }}>5 Civilians</Text>
                        
                       </View>         
-                      <View style={{ alignItems: 'flex-end', justifyContent: 'flex-end', flex: 1 }}>  
+                     
+            </View>
+            
+            </View>
+              <View style={{ alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>  
                           <TouchableOpacity
                                 style={styles.shareButton}
                                 onPress={handleShare}
-                                activeOpacity={0.6}
+                                activeOpacity={1}
                               >
-                                <Text style={{ fontFamily: 'Gruesome', fontSize: 17, color: 'white',  }}>Create Game</Text>
+                                <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white',  }}>Create Game</Text>
                               </TouchableOpacity>      
-                      </View>    
-            </View>
-            </View>
+                      </View>   
         </ImageBackground>
     );
 }
@@ -92,16 +94,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   shareButton: {
-    width: '80%', // Fixed width for the button area
-    height: '45%',
+    width: '30%', // Fixed width for the button area
+    height: '40%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#CC0000', // Solid darker red for the button background
-    borderRadius: 8,
+    backgroundColor: '#610000ff', // Solid darker red for the button background
+    borderRadius: 100,
     marginTop: 10,
-    marginBottom:20,
+    marginBottom:10,
     // SHADOW/GLOW EFFECT (Crucial for the image's look)
-    shadowColor: '#FF0000', 
+    shadowColor: '#640303ff', 
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1, 
     shadowRadius: 10, 
