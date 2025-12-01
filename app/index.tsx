@@ -1,18 +1,22 @@
 
-import { ImageBackground, StyleSheet, Text } from "react-native";
-
+import { Link } from "expo-router";
+import { ImageBackground, StatusBar, StyleSheet, Text } from "react-native";
 
 const backgroundImage= require("../assets/images/background.jpeg");
 
 export default function Index() {
   return (
-    <ImageBackground source={backgroundImage} style={styles.background}>
     
-      <Text style={styles.Text}>Host a Game</Text>
-      <Text style={styles.Text}>Join</Text>
-      <Text style={styles.Text}>Play Offline</Text>
-      <Text style={styles.Text}>Settings</Text>
+  
+    <ImageBackground source={backgroundImage} style={styles.background}>
+      <StatusBar hidden={true} />
+      <Text style={{fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 50}}>Maphia</Text>
+      <Link href="/create" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Host a Game</Link>
+      <Text style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Join</Text>
+      <Text style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Play Offline</Text>
+      <Text style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Settings</Text>
     </ImageBackground>
+
   );
 }
 const styles = StyleSheet.create({
@@ -26,6 +30,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 30,
     fontWeight: "bold",
-    fontFamily: "GruesomeRegular",
+    
   },
 });
