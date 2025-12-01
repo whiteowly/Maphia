@@ -16,7 +16,7 @@ const SliderMafia: React.FC<SliderProps> = ({ initialValue = 50 }) => {
     <View style={styles.container}>
       {/* Display the current slider value */}
       <Text style={styles.labelText}>
-        Number of players: {sliderValue}
+        Number of Maphias: {sliderValue}
       </Text>
 
       {/*  */}
@@ -48,15 +48,15 @@ const SliderMafia: React.FC<SliderProps> = ({ initialValue = 50 }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    padding: 5,
     alignItems: 'stretch', // Ensures the slider takes up the full width
   },
   labelText: {
     fontSize: 17,
     fontWeight: '600',
-    marginBottom: 10,
+    marginBottom: 5,
     textAlign: 'left',
-    color: 'red',
+    color: 'white',
     fontFamily: 'Gruesome',
   },
   slider: {
