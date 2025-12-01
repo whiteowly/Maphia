@@ -1,5 +1,7 @@
 
-import { Alert, ImageBackground, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import RedSelector from "./RedSelector";
 import RoomCodeShare from "./RoomCodeShare";
 import SliderComponent from './sliderComponent';
@@ -12,10 +14,15 @@ export default function Create() {
         // Replace this with actual sharing logic (e.g., using Expo's Sharing API)
         Alert.alert('Game Created', `Your game has been created successfully!`);
       };
+     const router = useRouter();
     return (
         <ImageBackground blurRadius={8} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30,  alignSelf: 'center', textAlign: 'center'  }}>Maphia</Text>
+            <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
+                <MaterialIcons name="arrow-back" size={30} color="white" />
+            </Pressable>
+         
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30,  alignSelf: 'flex-end', textAlign: 'right', marginRight: 30  }}>Maphia</Text>
            <View style={styles.container}>
             <View style={styles.cardContainer} >
                  <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 4, alignSelf: 'flex-start' }}>Game rules</Text>
@@ -139,5 +146,13 @@ const styles = StyleSheet.create({
   },
   smallerCard:{
  
+  }
+  ,
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 15,
+    padding: 6,
+    zIndex: 20,
   }
 });
