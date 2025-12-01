@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 5,
     alignItems: 'stretch', // Ensures the slider takes up the full width
+    marginTop: 10,
   },
   labelText: {
     fontSize: 17,

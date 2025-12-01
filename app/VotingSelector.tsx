@@ -11,7 +11,7 @@ interface RedSelectorProps {
 }
 
 // --- MAIN COMPONENT ---
-const RedSelector: React.FC<RedSelectorProps> = ({ currentValue, onSelectPress }) => {
+const VotingSelector: React.FC<RedSelectorProps> = ({ currentValue, onSelectPress }) => {
   
   // Define the function that will run when the selector is pressed
   const handlePress = () => {
@@ -90,4 +90,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RedSelector;
+export default VotingSelector;
