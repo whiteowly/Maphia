@@ -1,14 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const backgroundImage = require("../assets/images/background.jpeg");
 
-export default function Create() {
+export default function Join() {
     const handleShare = () => {
-        // Replace this with actual sharing logic (e.g., using Expo's Sharing API)
-        Alert.alert('Game Created', `Your game has been created successfully!`);
+       router.push('/lobby');
     };
     const router = useRouter();
     const [text, onChangeText] = React.useState('Code...');
@@ -101,5 +100,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.8)',
         borderRadius: 8,
         fontSize: 20,
+        alignItems: 'center',
     }
 });
