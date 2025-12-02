@@ -16,7 +16,7 @@ export default function Create() {
       };
      const router = useRouter();
     return (
-        <ImageBackground blurRadius={8} source={backgroundImage} style={styles.background}>
+        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
                 <MaterialIcons name="arrow-back" size={30} color="white" />
