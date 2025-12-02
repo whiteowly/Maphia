@@ -28,6 +28,8 @@ useEffect(() =>  {
       <Stack.Screen name="create" options={{ headerShown: false }} />
       <Stack.Screen name="join" options={{ headerShown: false }} />
       <Stack.Screen name="lobby" options={{ headerShown: false }} />
+      <Stack.Screen name="roleRevealMaphia" options={{ headerShown: false }} />
+      <Stack.Screen name="roleRevealCiv" options={{ headerShown: false }} />
     </Stack>
   );
 }

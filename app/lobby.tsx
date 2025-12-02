@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React from 'react';
 import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -63,7 +63,7 @@ export default function Join() {
                     onPress={handleShare}
                     activeOpacity={1}
                 >
-                    <Text style={[styles.Text, {  fontSize: 25 }]}>Ready✅</Text>
+                    <Link href="/roleRevealMaphia" style={[styles.Text, {  fontSize: 25 }]}>Ready✅</Link>
                 </TouchableOpacity>
             </View>
         </ImageBackground>

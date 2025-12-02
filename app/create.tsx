@@ -1,6 +1,6 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import RedSelector from "./RedSelector";
 import RoomCodeShare from "./RoomCodeShare";
@@ -58,7 +58,7 @@ export default function Create() {
                                 onPress={handleShare}
                                 activeOpacity={1}
                               >
-                                <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white',  }}>Create Game</Text>
+                                <Link href= '/roleRevealCiv' style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white',  }}>Create Game</Link>
                               </TouchableOpacity>      
                       </View>   
         </ImageBackground>
