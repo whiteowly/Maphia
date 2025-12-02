@@ -63,7 +63,7 @@ export default function Join() {
                     onPress={handleShare}
                     activeOpacity={1}
                 >
-                    <Text style={[styles.Text, {  fontSize: 25 }]}>Ready</Text>
+                    <Text style={[styles.Text, {  fontSize: 25 }]}>Ready✅</Text>
                 </TouchableOpacity>
             </View>
         </ImageBackground>
