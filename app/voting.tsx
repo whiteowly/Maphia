@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const backgroundImage = require("../assets/images/lobby.png");
@@ -27,8 +27,7 @@ export default function Join() {
         { name: 'welp', icon: undefined, dead: false },
     ];
 
-    const leftPlayers = players.slice(0, 6);
-    const rightPlayers = players.slice(6, 12);
+    // we'll show all players in a scrollable left pane
 
     return (
         <ImageBackground source={backgroundImage} style={styles.background}>
@@ -41,46 +40,32 @@ export default function Join() {
 
             <View>
                 <Text style={[styles.topCenterText, { fontSize: 26 }]}>Time Remaining - 01:16</Text>
-                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Role - Maphia</Text>
+                <Text style={[styles.baseText, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Role - Maphia</Text>
 
                 <View style={styles.cardContainer}>
-                  
-
-                    <View style={styles.playersColumnsRow}>
-                        <View style={styles.playerColumn}>
-                            {leftPlayers.map((p, i) => (
-                                <View key={i} style={styles.playerRow}>
-                                    {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                    <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                    {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
-                                </View>
-                            ))}
+                    <View style={styles.votingRow}>
+                            <ScrollView
+                                style={styles.leftPane}
+                                contentContainerStyle={styles.leftPaneContent}
+                                showsVerticalScrollIndicator={true}
+                                nestedScrollEnabled={true}
+                                stickyHeaderIndices={[0]}
+                            >
+                                <Text style={[{color: 'white'},styles.scrollHeader, ]}>who do you think is the maphia?</Text>
+                                {players.filter(p => !p.dead).map((p, i) => (
+                                    <View key={i} style={styles.playerRow}>
+                                        {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
+                                        <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
+                                        {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
+                                    </View>
+                                ))}
+                            </ScrollView>
+                      
                         </View>
-
-                        <View style={styles.playerColumn}>
-                            {rightPlayers.map((p, i) => (
-                                <View key={i} style={styles.playerRow}>
-                                    {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                    <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                    {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
-                                </View>
-                            ))}
-                        </View>
-                    </View>
                 </View>
             </View>
 
-               <View style={styles.bottomRightContainer}>
-                          
-                            
-                          <TouchableOpacity
-                              style={styles.shareButton}
-                              onPress={handleShare}
-                              activeOpacity={1}
-                          >
-                              <Text style={[styles.Text, {  fontSize: 25 }]}>vote</Text>
-                          </TouchableOpacity>
-                      </View>
+              
         </ImageBackground>
     );
 }
@@ -88,6 +73,10 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         resizeMode: "cover",
+    },
+    baseText: {
+        color: "white",
+        fontFamily: 'Gruesome',
     },
     Text: {
         color: "white",
@@ -100,9 +89,9 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 3,
         margin: 10,
-        marginLeft: 150,
-        marginRight: 150,
-        backgroundColor: 'transparent', // Grey background
+        marginLeft: 70,
+        marginRight: 450,
+        backgroundColor: '#00000080', // Grey background
         shadowColor: '#250101ff',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -120,7 +109,7 @@ const styles = StyleSheet.create({
         marginRight: 600,
         flex: 0.3,
 
-
+        backgroundColor: '#22010180', // Grey background
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -140,7 +129,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#610000ff', // Solid darker red for the button background
         borderRadius: 100,
         marginTop: 10,
-        marginBottom: 10,
+        marginBottom: 0,
         marginRight: 320,
         // SHADOW/GLOW EFFECT (Crucial for the image's look)
         shadowColor: '#640303ff',
@@ -173,11 +162,10 @@ const styles = StyleSheet.create({
     ,
     bottomRightContainer: {
 
-        position: 'absolute',
         bottom: 20,
-        right: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
+        marginLeft: 95,
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
 
     },
     roomPress: {
@@ -215,6 +203,27 @@ const styles = StyleSheet.create({
     iconAfter: {
         marginLeft: 8,
     },
+    votingRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        width: '100%',
+    },
+    leftPane: {
+        width: 240,
+        maxHeight: 230,
+        backgroundColor: 'transparent',
+        paddingVertical: 8,
+    },
+    leftPaneContent: {
+        paddingHorizontal: 8,
+        paddingBottom: 8,
+    },
+    rightPane: {
+        flex: 1,
+        paddingLeft: 16,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
     playersRowSingle: {
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -243,6 +252,17 @@ const styles = StyleSheet.create({
     ,
     deadText: {
         color: 'gray',
+    }
+    ,
+    scrollHeader: {
+        fontSize: 20,
+        marginBottom: 8,
+       
+        paddingVertical: 6,
+        paddingHorizontal: 8,
+        alignSelf: 'stretch',
+        color: 'white',
+        fontWeight: '600',
     }
     ,
     topCenterText: {
