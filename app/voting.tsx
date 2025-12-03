@@ -72,15 +72,13 @@ export default function Join() {
 
                <View style={styles.bottomRightContainer}>
                           
-                              <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
-                                  3/3 Maphias remain
-                              </Text>
+                            
                           <TouchableOpacity
                               style={styles.shareButton}
                               onPress={handleShare}
                               activeOpacity={1}
                           >
-                              <Text style={[styles.Text, {  fontSize: 25 }]}>Mute</Text>
+                              <Text style={[styles.Text, {  fontSize: 25 }]}>vote</Text>
                           </TouchableOpacity>
                       </View>
         </ImageBackground>
@@ -142,14 +140,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#610000ff', // Solid darker red for the button background
         borderRadius: 100,
         marginTop: 10,
-        marginBottom: 16,
-        marginRight: 20,
+        marginBottom: 10,
+        marginRight: 320,
         // SHADOW/GLOW EFFECT (Crucial for the image's look)
         shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,
         shadowRadius: 10,
         elevation: 10, // Android shadow effect
+       
     },
     backButton: {
         position: 'absolute',
@@ -177,8 +176,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 20,
         right: 16,
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
+        alignItems: 'center',
+        justifyContent: 'center',
 
     },
     roomPress: {
