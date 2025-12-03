@@ -1,6 +1,6 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React from 'react';
 import { Image, ImageBackground, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 
@@ -32,7 +32,7 @@ const roleReveal = () => {
                     style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
                     source={require('../assets/images/maphiaCard.png')}
                 />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 20, alignSelf: 'center' }}>You are a Maphia!</Text>
+                 <Link href="/game" style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 20, alignSelf: 'center' }}>You are a Maphia!</Link>
             </View>
         </ImageBackground>
     )

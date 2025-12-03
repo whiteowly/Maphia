@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#610000ff', // Solid darker red for the button background
         borderRadius: 100,
         marginTop: 10,
-        marginBottom: 20,
+        marginBottom: 16,
         marginRight: 20,
         // SHADOW/GLOW EFFECT (Crucial for the image's look)
         shadowColor: '#640303ff',
