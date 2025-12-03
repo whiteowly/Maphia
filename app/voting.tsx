@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -80,7 +80,7 @@ export default function Join() {
                               onPress={handleShare}
                               activeOpacity={1}
                           >
-                              <Link href="/voting" style={[styles.Text, {  fontSize: 25 }]}>Mute</Link>
+                              <Text style={[styles.Text, {  fontSize: 25 }]}>Mute</Text>
                           </TouchableOpacity>
                       </View>
         </ImageBackground>

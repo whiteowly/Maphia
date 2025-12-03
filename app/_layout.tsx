@@ -31,6 +31,7 @@ useEffect(() =>  {
       <Stack.Screen name="roleRevealMaphia" options={{ headerShown: false }} />
       <Stack.Screen name="roleRevealCiv" options={{ headerShown: false }} />
       <Stack.Screen name="game" options={{ headerShown: false }} />
+      <Stack.Screen name="voting" options={{ headerShown: false }} />
     </Stack>
   );
 }
