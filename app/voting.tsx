@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React from 'react';
-import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const backgroundImage = require("../assets/images/lobby.png");
@@ -27,7 +27,9 @@ export default function Join() {
         { name: 'welp', icon: undefined, dead: false },
     ];
 
-    // we'll show all players in a scrollable left pane
+    const leftPlayers = players.slice(0, 4);
+    const rightPlayers = players.slice(4, 8);
+    const centerPlayers = players.slice(8, 12);
 
     return (
         <ImageBackground source={backgroundImage} style={styles.background}>
@@ -40,32 +42,73 @@ export default function Join() {
 
             <View>
                 <Text style={[styles.topCenterText, { fontSize: 26 }]}>Time Remaining - 01:16</Text>
-                <Text style={[styles.baseText, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Role - Maphia</Text>
+                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Role - Maphia</Text>
 
                 <View style={styles.cardContainer}>
-                    <View style={styles.votingRow}>
-                            <ScrollView
-                                style={styles.leftPane}
-                                contentContainerStyle={styles.leftPaneContent}
-                                showsVerticalScrollIndicator={true}
-                                nestedScrollEnabled={true}
-                                stickyHeaderIndices={[0]}
-                            >
-                                <Text style={[{color: 'white'},styles.scrollHeader, ]}>who do you think is the maphia?</Text>
-                                {players.filter(p => !p.dead).map((p, i) => (
-                                    <View key={i} style={styles.playerRow}>
+                  
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 21, color: 'white', marginTop: 0, alignSelf: 'center' }}>Who do you want to vote for?</Text>
+                    <ScrollView
+                        style={styles.playersScroll}
+                        contentContainerStyle={styles.playersScrollContent}
+                        showsVerticalScrollIndicator={true}
+                        nestedScrollEnabled={true}
+                    >
+                        <View style={styles.playersColumnsRow}>
+                            <View style={styles.playerColumn}>
+                            {leftPlayers.map((p, i) => (
+                                <View key={i} style={styles.playerCard}>
+                                    <View style={styles.playerRow}>
                                         {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
                                         <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
                                         {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
                                     </View>
-                                ))}
-                            </ScrollView>
-                      
+                                </View>
+                            ))}
                         </View>
+
+                        <View style={styles.playerColumn}>
+                            {rightPlayers.map((p, i) => (
+                                <View key={i} style={styles.playerCard}>
+                                    <View style={styles.playerRow}>
+                                        {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
+                                        <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
+                                        {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
+                                    </View>
+                                </View>
+                            ))}
+                            </View>
+                            
+                        <View style={styles.playerColumn}>
+                            {centerPlayers.map((p, i) => (
+                                <View key={i} style={styles.playerCard}>
+                                    <View style={styles.playerRow}>
+                                        {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
+                                        <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
+                                        {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
+                                    </View>
+                                </View>
+                            ))}
+                            </View>
+
+                        
+                        </View>
+                    </ScrollView>
                 </View>
             </View>
 
-              
+               <View style={styles.bottomRightContainer}>
+                          
+                              <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
+                                  0/12 voted
+                              </Text>
+                          <TouchableOpacity
+                              style={styles.shareButton}
+                              onPress={handleShare}
+                              activeOpacity={1}
+                          >
+                              <Link href="/voting" style={[styles.Text, {  fontSize: 25 }]}>Mute</Link>
+                          </TouchableOpacity>
+                      </View>
         </ImageBackground>
     );
 }
@@ -73,10 +116,6 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         resizeMode: "cover",
-    },
-    baseText: {
-        color: "white",
-        fontFamily: 'Gruesome',
     },
     Text: {
         color: "white",
@@ -88,10 +127,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 15,
         borderRadius: 3,
-        margin: 10,
-        marginLeft: 70,
-        marginRight: 450,
-        backgroundColor: '#00000080', // Grey background
+        margin: 0,
+        marginLeft: 150,
+        marginRight: 150,
+        backgroundColor: 'transparent', // Grey background
         shadowColor: '#250101ff',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -109,7 +148,7 @@ const styles = StyleSheet.create({
         marginRight: 600,
         flex: 0.3,
 
-        backgroundColor: '#22010180', // Grey background
+
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -129,15 +168,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#610000ff', // Solid darker red for the button background
         borderRadius: 100,
         marginTop: 10,
-        marginBottom: 0,
-        marginRight: 320,
+        marginBottom: 16,
+        marginRight: 20,
         // SHADOW/GLOW EFFECT (Crucial for the image's look)
         shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,
         shadowRadius: 10,
         elevation: 10, // Android shadow effect
-       
     },
     backButton: {
         position: 'absolute',
@@ -162,10 +200,11 @@ const styles = StyleSheet.create({
     ,
     bottomRightContainer: {
 
+        position: 'absolute',
         bottom: 20,
-        marginLeft: 95,
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
+        right: 16,
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
 
     },
     roomPress: {
@@ -203,27 +242,6 @@ const styles = StyleSheet.create({
     iconAfter: {
         marginLeft: 8,
     },
-    votingRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        width: '100%',
-    },
-    leftPane: {
-        width: 240,
-        maxHeight: 230,
-        backgroundColor: 'transparent',
-        paddingVertical: 8,
-    },
-    leftPaneContent: {
-        paddingHorizontal: 8,
-        paddingBottom: 8,
-    },
-    rightPane: {
-        flex: 1,
-        paddingLeft: 16,
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-    },
     playersRowSingle: {
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -254,17 +272,6 @@ const styles = StyleSheet.create({
         color: 'gray',
     }
     ,
-    scrollHeader: {
-        fontSize: 20,
-        marginBottom: 8,
-       
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        alignSelf: 'stretch',
-        color: 'white',
-        fontWeight: '600',
-    }
-    ,
     topCenterText: {
         position: 'absolute',
         top: 20,
@@ -276,5 +283,25 @@ const styles = StyleSheet.create({
         zIndex: 20,
     }
     ,
+    playerCard: {
+        backgroundColor: 'rgba(255, 1, 1, 0.03)',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 60,
+        marginVertical: 6,
+        minWidth: 200,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    playersScroll: {
+        width: '100%',
+        maxHeight: 280,
+        paddingHorizontal: 8,
+        marginTop: 8,
+    },
+    playersScrollContent: {
+        paddingBottom: 12,
+        alignItems: 'center',
+    },
  
 });
