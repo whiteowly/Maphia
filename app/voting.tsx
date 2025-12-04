@@ -32,7 +32,7 @@ export default function Join() {
     const centerPlayers = players.slice(8, 12);
 
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground blurRadius={8} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
 
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
@@ -62,6 +62,7 @@ export default function Join() {
                                         <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
                                         {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
                                     </View>
+                                    <Text style={[styles.playerSubText, p.dead ? styles.deadText : null]}>{p.dead ? ' ' : 'Jer'}</Text>
                                 </View>
                             ))}
                         </View>
@@ -74,6 +75,7 @@ export default function Join() {
                                         <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
                                         {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
                                     </View>
+                                    <Text style={[styles.playerSubText, p.dead ? styles.deadText : null]}>{p.dead ? ' ' : 'Jer'}</Text>
                                 </View>
                             ))}
                             </View>
@@ -86,6 +88,7 @@ export default function Join() {
                                         <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
                                         {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
                                     </View>
+                                    <Text style={[styles.playerSubText, p.dead ? styles.deadText : null]}>{p.dead ? ' ' : 'Jer'}</Text>
                                 </View>
                             ))}
                             </View>
@@ -268,6 +271,14 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     }
     ,
+    playerSubText: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.75)',
+        marginTop: 0,
+        fontFamily: 'Gruesome',
+        textAlign: 'center',
+    }
+    ,
     deadText: {
         color: 'gray',
     }
@@ -284,7 +295,7 @@ const styles = StyleSheet.create({
     }
     ,
     playerCard: {
-        backgroundColor: 'rgba(255, 1, 1, 0.03)',
+        backgroundColor: 'rgba(243, 215, 215, 0.03)',
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 60,
@@ -295,7 +306,7 @@ const styles = StyleSheet.create({
     },
     playersScroll: {
         width: '100%',
-        maxHeight: 280,
+        maxHeight: 260,
         paddingHorizontal: 8,
         marginTop: 8,
     },
