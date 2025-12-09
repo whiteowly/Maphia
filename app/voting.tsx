@@ -102,14 +102,14 @@ export default function Join() {
                <View style={styles.bottomRightContainer}>
                           
                               <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
-                                  0/12 voted
+                                  9/9 voted
                               </Text>
                           <TouchableOpacity
                               style={styles.shareButton}
                               onPress={handleShare}
                               activeOpacity={1}
                           >
-                              <Link href="/voting" style={[styles.Text, {  fontSize: 25 }]}>Mute</Link>
+                              <Link href="/revealUI" style={[styles.Text, {  fontSize: 25 }]}>Mute</Link>
                           </TouchableOpacity>
                       </View>
         </ImageBackground>
