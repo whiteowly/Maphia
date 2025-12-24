@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  avatarUrl     String?
+  gamesPlayed   Int       @default(0)
+  gamesWon      Int       @default(0)
+  players       Player[]  // History of games joined
+}
+
+model Room {
+  id             String    @id @default(cuid())
+  code           String    @unique // The 6-character join code
+  status         RoomStatus @default(LOBBY)
+  
+  // Settings from your UI
+  maxPlayers     Int       @default(7)
+  maphiaCount    Int       @default(2)
+  discussionTime Int       @default(2) // In minutes
+  
+  players        Player[]
+  createdAt      DateTime  @default(now())
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  role      Role     @default(PENDING) // Assigned when game starts
+  isAlive   Boolean  @default(true)
+  isReady   Boolean  @default(false)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+}
+
+enum RoomStatus {
+  LOBBY        // Waiting for players to join/ready up
+  ROLE_REVEAL  // The "You are a Maphia" screen
+  DISCUSSION   // Day phase
+  VOTING       // Voting phase
+  NIGHT        // Maphia action phase
+  FINISHED
+}
+
+enum Role {
+  PENDING
+  CIVILIAN
+  MAPHIA
+}

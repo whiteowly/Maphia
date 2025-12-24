@@ -1,0 +1,41 @@
+import { fontFamily } from '@/dimensions/fontFamily';
+import { useFonts } from 'expo-font';
+import { Stack } from "expo-router";
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import '../global.css';
+import { SocketProvider } from '../context/SocketContext';
+
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+    const [fontsLoaded] = useFonts({
+    [fontFamily.IrishGrover]: require('../assets/fonts/IrishGrover-Regular.ttf'),
+    [fontFamily.Gruesome]: require('../assets/fonts/Gruesome.ttf'), 
+  });
+
+useEffect(() =>  {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+  return (
+    <SocketProvider>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="create" options={{ headerShown: false }} />
+        <Stack.Screen name="join" options={{ headerShown: false }} />
+        <Stack.Screen name="lobby" options={{ headerShown: false }} />
+        <Stack.Screen name="roleRevealMaphia" options={{ headerShown: false }} />
+        <Stack.Screen name="roleRevealCiv" options={{ headerShown: false }} />
+        <Stack.Screen name="game" options={{ headerShown: false }} />
+        <Stack.Screen name="voting" options={{ headerShown: false }} />
+        <Stack.Screen name="revealUI" options={{ headerShown: false }} />
+      </Stack>
+    </SocketProvider>
+  );
+}
