@@ -34,6 +34,7 @@ useEffect(() =>  {
       <Stack.Screen name="voting" options={{ headerShown: false }} />
       <Stack.Screen name="revealUI" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="Accounts" options={{ headerShown: false }} /> 
     </Stack>
   );
 }
