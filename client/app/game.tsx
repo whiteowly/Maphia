@@ -1,34 +1,50 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
-import React from 'react';
+import { MaterialIcons, Ionicons, MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { Link, useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useSocket } from '../context/SocketContext';
+
 const backgroundImage = require("../assets/images/lobby.png");
 
-export default function Join() {
+export default function Game() {
     const router = useRouter();
+    const { socket } = useSocket();
+    const { roomCode, userId } = useLocalSearchParams();
+    const [players, setPlayers] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        // Fetch players for this room
+        socket.emit("GET_LOBBY_PLAYERS", roomCode);
+
+        socket.on("ROOM_PLAYERS", (list) => {
+            setPlayers(list);
+        });
+
+        socket.on("GAME_STARTED", (updatedPlayers) => {
+            const myPlayer = updatedPlayers.find((p: any) => p.userId === Number(userId));
+            if (myPlayer?.role === 'MAPHIA') {
+                router.push('/roleRevealMaphia');
+            } else {
+                router.push('/roleRevealCiv');
+            }
+        });
+
+        return () => {
+            socket.off("ROOM_PLAYERS");
+            socket.off("GAME_STARTED");
+        };
+    }, [socket, roomCode, userId]);
+
     const handleShare = () => {
-        router.push('/lobby');
+        // Placeholder for ready/start logic if needed
+        socket?.emit("TOGGLE_READY", { roomCode, userId: Number(userId) });
     };
 
-    const players = [
-        { name: 'Jer (host)', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Jeri (You)', icon: { type: 'mc', name: 'hat-fedora' }, dead: false },
-        { name: 'Jerbear', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Jerry', icon: undefined, dead: true },
-        { name: 'Jerusalem', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Eyerus', icon: { type: 'mc', name: 'hat-fedora' }, dead: false },
-        { name: 'Eyerusalem', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Eyu', icon: { type: 'mc', name: 'hat-fedora' }, dead: false },
-        { name: 'Jerbear2', icon: undefined, dead: true },
-        { name: 'J', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'imoutofnames', icon: undefined, dead: true },
-        { name: 'welp', icon: undefined, dead: false },
-    ];
-
-    const leftPlayers = players.slice(0, 6);
-    const rightPlayers = players.slice(6, 12);
+    const midPoint = Math.ceil(players.length / 2);
+    const leftPlayers = players.slice(0, midPoint);
+    const rightPlayers = players.slice(midPoint);
 
     return (
         <ImageBackground source={backgroundImage} style={styles.background}>
@@ -36,12 +52,12 @@ export default function Join() {
 
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
                 <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave game</Text>
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave Lobby</Text>
             </Pressable>
 
             <View>
-                <Text style={[styles.topCenterText, { fontSize: 26 }]}>Time Remaining - 01:16</Text>
-                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Role - Maphia</Text>
+                <Text style={[styles.topCenterText, { fontSize: 26 }]}>Room Code: {roomCode}</Text>
+                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Lobby</Text>
 
                 <View style={styles.cardContainer}>
                   
@@ -50,9 +66,13 @@ export default function Join() {
                         <View style={styles.playerColumn}>
                             {leftPlayers.map((p, i) => (
                                 <View key={i} style={styles.playerRow}>
-                                    {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                    <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                    {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
+                                    <Icon name="account" size={18} color="white" style={styles.iconBefore} />
+                                    <Text style={[styles.playerText]}>{p.user?.username || "Unknown"}</Text>
+                                    {p.isReady ? (
+                                        <Ionicons name="checkmark-circle" size={18} color="green" style={styles.iconAfter} />
+                                    ) : (
+                                        <Ionicons name="ellipse-outline" size={18} color="gray" style={styles.iconAfter} />
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -60,9 +80,13 @@ export default function Join() {
                         <View style={styles.playerColumn}>
                             {rightPlayers.map((p, i) => (
                                 <View key={i} style={styles.playerRow}>
-                                    {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                    <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                    {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
+                                    <Icon name="account" size={18} color="white" style={styles.iconBefore} />
+                                    <Text style={[styles.playerText]}>{p.user?.username || "Unknown"}</Text>
+                                    {p.isReady ? (
+                                        <Ionicons name="checkmark-circle" size={18} color="green" style={styles.iconAfter} />
+                                    ) : (
+                                        <Ionicons name="ellipse-outline" size={18} color="gray" style={styles.iconAfter} />
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -73,14 +97,14 @@ export default function Join() {
                <View style={styles.bottomRightContainer}>
                           
                               <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
-                                  3/3 Maphias remain
+                                  {players.filter(p => p.isReady).length}/{players.length} Ready
                               </Text>
                           <TouchableOpacity
                               style={styles.shareButton}
                               onPress={handleShare}
                               activeOpacity={1}
                           >
-                              <Link href="/voting" style={[styles.Text, {  fontSize: 25 }]}>Mute</Link>
+                              <Text style={[styles.Text, {  fontSize: 25 }]}>Ready</Text>
                           </TouchableOpacity>
                       </View>
         </ImageBackground>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 // Import the Slider component
 import Slider from '@react-native-community/slider';
@@ -6,11 +6,17 @@ import Slider from '@react-native-community/slider';
 // Define the shape of our component's props (if we needed custom props)
 interface SliderProps {
   initialValue?: number;
+  onValueChange?: (value: number) => void;
+  maximumValue?: number;
 }
 
-const SliderMafia: React.FC<SliderProps> = ({ initialValue = 50 }) => {
+const SliderMafia: React.FC<SliderProps> = ({ initialValue = 50, onValueChange, maximumValue = 3 }) => {
   // Use TypeScript to define the state type as 'number'
   const [sliderValue, setSliderValue] = useState<number>(initialValue);
+
+  useEffect(() => {
+    setSliderValue(initialValue);
+  }, [initialValue]);
 
   return (
     <View style={styles.container}>
@@ -26,7 +32,7 @@ const SliderMafia: React.FC<SliderProps> = ({ initialValue = 50 }) => {
         
         // --- Required Props ---
         minimumValue={1}
-        maximumValue={3}
+        maximumValue={maximumValue}
         step={1} // Example: allow half-integer steps
         
         // The value prop is bound to the state
@@ -35,6 +41,7 @@ const SliderMafia: React.FC<SliderProps> = ({ initialValue = 50 }) => {
         // The onValueChange prop is typed to receive a 'number'
         onValueChange={(value: number) => {
           setSliderValue(value);
+          if (onValueChange) onValueChange(value);
         }}
 
         // --- Optional Styling Props ---

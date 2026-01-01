@@ -30,7 +30,8 @@ model Room {
   // Settings from your UI
   maxPlayers     Int       @default(7)
   maphiaCount    Int       @default(2)
-  discussionTime Int       @default(2) // In minutes
+  discussionTime Int       @default(60) // In sec
+  votingTime     Int       @default(30)  // In sec
   
   players        Player[]
   createdAt      DateTime  @default(now())

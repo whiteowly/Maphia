@@ -1,12 +1,18 @@
 import { fontFamily } from '@/dimensions/fontFamily';
 import { useFonts } from 'expo-font';
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import '../global.css';
 import { SocketProvider } from '../context/SocketContext';
+import { SettingsProvider, useSettings } from '../context/SettingsContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+
 
 SplashScreen.preventAutoHideAsync();
+
+
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
@@ -24,6 +30,8 @@ useEffect(() =>  {
     return null;
   }
   return (
+    <SettingsProvider>
+    <SafeAreaProvider>
     <SocketProvider>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -35,7 +43,11 @@ useEffect(() =>  {
         <Stack.Screen name="game" options={{ headerShown: false }} />
         <Stack.Screen name="voting" options={{ headerShown: false }} />
         <Stack.Screen name="revealUI" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="offline" options={{ headerShown: false }} />
       </Stack>
     </SocketProvider>
+    </SafeAreaProvider>
+    </SettingsProvider>
   );
 }

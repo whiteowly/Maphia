@@ -6,9 +6,21 @@ import Slider from '@react-native-community/slider';
 // Define the shape of our component's props (if we needed custom props)
 interface SliderProps {
   initialValue?: number;
+  onValueChange?: (value: number) => void;
+  minimumValue?: number;
+  maximumValue?: number;
+  step?: number;
+  label?: string;
 }
 
-const SliderComponent: React.FC<SliderProps> = ({ initialValue = 50 }) => {
+const SliderComponent: React.FC<SliderProps> = ({
+  initialValue = 50,
+  onValueChange,
+  minimumValue = 5,
+  maximumValue = 12,
+  step = 1,
+  label = 'Number of players',
+}) => {
   // Use TypeScript to define the state type as 'number'
   const [sliderValue, setSliderValue] = useState<number>(initialValue);
 
@@ -16,7 +28,7 @@ const SliderComponent: React.FC<SliderProps> = ({ initialValue = 50 }) => {
     <View style={styles.container}>
       {/* Display the current slider value */}
       <Text style={styles.labelText}>
-        Number of players: {sliderValue}
+        {label}: {sliderValue}
       </Text>
 
       {/*  */}
@@ -25,9 +37,9 @@ const SliderComponent: React.FC<SliderProps> = ({ initialValue = 50 }) => {
         style={styles.slider}
         
         // --- Required Props ---
-        minimumValue={5}
-        maximumValue={12}
-        step={1} // Example: allow half-integer steps
+        minimumValue={minimumValue}
+        maximumValue={maximumValue}
+        step={step} // Example: allow half-integer steps
         
         // The value prop is bound to the state
         value={sliderValue} 
@@ -35,6 +47,7 @@ const SliderComponent: React.FC<SliderProps> = ({ initialValue = 50 }) => {
         // The onValueChange prop is typed to receive a 'number'
         onValueChange={(value: number) => {
           setSliderValue(value);
+          if (onValueChange) onValueChange(value);
         }}
 
         // --- Optional Styling Props ---

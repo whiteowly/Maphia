@@ -1,39 +1,36 @@
-
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
-import { useSettings } from '../context/SettingsContext';
 import { useSocket } from '../context/SocketContext';
 import SliderComponent from './sliderComponent';
 import SliderMafia from "./sliderMafia";
+
 const backgroundImage = require("../assets/images/background.jpeg");
 
-export default function Create() {
+export default function Offline() {
     const router = useRouter();
     const { socket } = useSocket();
-    const { playSound } = useSettings();
     
-    // Default settings (you can wire these up to the sliders later)
     const [maxPlayers, setMaxPlayers] = useState(7);
     const [maphiaCount, setMaphiaCount] = useState(2);
     const [discussionTime, setDiscussionTime] = useState(60);
     const [votingTime, setVotingTime] = useState(30);
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
         if (!socket) return;
 
-        const onConnect = () => console.log("Socket connected event:", socket.id);
-        const onConnectError = (err: any) => {
-            console.log("Socket connection error:", err.message);
-            Alert.alert("Connection Error", "Cannot connect to server.\n\nIf on Android Emulator, use http://10.0.2.2:3000.\nIf on physical device, use your PC's LAN IP.");
-        };
+        // Update connection status
+        setIsConnected(socket.connected);
+        const onConnect = () => setIsConnected(true);
+        const onDisconnect = () => setIsConnected(false);
 
         socket.on("connect", onConnect);
-        socket.on("connect_error", onConnectError);
+        socket.on("disconnect", onDisconnect);
 
         const onLobbyCreated = ({ roomCode, userId }: { roomCode: string, userId: any }) => {
-            console.log("LOBBY_CREATED received:", roomCode, userId);
+            console.log("LOCAL_LOBBY_CREATED received:", roomCode, userId);
             router.push({
                 pathname: '/lobby',
                 params: { roomCode, userId }
@@ -45,26 +42,20 @@ export default function Create() {
         return () => {
             socket.off("LOBBY_CREATED", onLobbyCreated);
             socket.off("connect", onConnect);
-            socket.off("connect_error", onConnectError);
+            socket.off("disconnect", onDisconnect);
         };
     }, [socket, router]);
 
     const handleCreate = () => {
-        // Play sound effect (Ensure button_click.mp3 exists)
-       // playSound(require('../assets/sounds/button_click.mp3'));
-        console.log("Create button pressed");
         if (!socket || !socket.connected) {
-            console.log("Socket exists but NOT connected. ID:", socket?.id);
+            Alert.alert("Connection Error", "Not connected to server. Ensure server is running on local network.");
             return;
         }
-        console.log("Socket connected. ID:", socket.id);
-        // Generate a random host name since input was removed
         const username = "Host" + Math.floor(Math.random() * 1000);
-        socket?.emit("CREATE_LOBBY", { username, maxPlayers, maphiaCount, discussionTime, votingTime });
-        console.log("Emitted CREATE_LOBBY with:", { username, maxPlayers, maphiaCount, discussionTime, votingTime });
+        // We use the same event as online for now, assuming the server handles both
+        socket.emit("CREATE_LOBBY", { username, maxPlayers, maphiaCount, discussionTime, votingTime });
     };
 
-    // Calculate max allowed maphias: Civilians > Maphias => Total > 2 * Maphias
     const maxMaphiaAllowed = Math.min(3, Math.floor((maxPlayers - 1) / 2));
 
     const handleSetMaxPlayers = (val: number) => {
@@ -82,7 +73,12 @@ export default function Create() {
                 <MaterialIcons name="arrow-back" size={30} color="white" />
             </Pressable>
          
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30,  alignSelf: 'flex-end', textAlign: 'right', marginRight: 30  }}>Maphia</Text>
+            <Text style={styles.headerTitle}>Local Play</Text>
+            <Text style={[styles.subHeader, { color: isConnected ? '#4caf50' : '#ff4444', fontWeight: 'bold' }]}>
+                {isConnected ? "Connected to Server" : "Disconnected (Check IP in SocketContext)"}
+            </Text>
+            <Text style={styles.subHeader}>Ensure all players are on the same Wi-Fi</Text>
+
            <View style={styles.container}>
             <View style={styles.cardContainer} >
                  <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 4, alignSelf: 'flex-start' }}>Game rules</Text>
@@ -126,96 +122,30 @@ export default function Create() {
                                 onPress={handleCreate}
                                 activeOpacity={1}
                               >
-                                <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white' }}>Create Game</Text>
+                                <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white' }}>Create Local</Text>
                               </TouchableOpacity>      
                       </View>   
         </ImageBackground>
     );
 }
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: "cover",
-    },
-    container: {
-        flex: 1,
-        flexDirection: 'row', 
-        marginTop: 5,
-        marginBottom: 50,
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        marginLeft: 10,
-        marginRight: 10,
-    },
+    background: { flex: 1, resizeMode: "cover" },
+    headerTitle: { fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30,  alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 },
+    subHeader: { fontFamily: 'Gruesome', fontSize: 20, color: '#ccc', marginBottom: 0, marginLeft: 30, marginTop: 5,  alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 },
+    container: { flex: 1, flexDirection: 'row', marginTop: 5, marginBottom: 50, alignItems: "flex-start", justifyContent: "space-between", marginLeft: 10, marginRight: 10 },
     cardContainer: {
-    // Flexbox: defines the layout of its children (title and contentRow)
-    flexDirection: 'column', 
-    padding: 15,
-    borderRadius: 3,
-    margin: 10,
-    marginLeft: 70,
-    marginRight: 10,
-    flex: 0.7,
-    backgroundColor: '#22010180', // Grey background
-    shadowColor: '#250101ff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  shareButton: {
-    width: '30%', // Fixed width for the button area
-    height: '40%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#610000ff', // Solid darker red for the button background
-    borderRadius: 100,
-    marginTop: 10,
-    marginBottom:10,
-    // SHADOW/GLOW EFFECT (Crucial for the image's look)
-    shadowColor: '#640303ff', 
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, 
-    shadowRadius: 10, 
-    elevation: 10, // Android shadow effect
-  },
-  cardContainer1: {
-    // Flexbox: defines the layout of its children (title and contentRow)
-    flexDirection: 'column', 
-    padding: 15,
-    borderRadius: 3,
-    margin: 10,
-    marginLeft: 10,
-    marginRight: 20,
-    flex: 0.3,
-    backgroundColor: '#22010180', // Grey background
-    shadowColor: '#250101ff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  contentRow: {
-    // Flexbox: groups Item 1 and Item 2 to display them in a row
-    flexDirection: 'row', 
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-  },
-    contentColumn: {
-    // Flexbox: groups Item 1 and Item 2 to display them in a row
-    flexDirection: 'column', 
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  smallerCard:{
- 
-  }
-  ,
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 15,
-    padding: 6,
-    zIndex: 20,
-  },
+        flexDirection: 'column', padding: 15, borderRadius: 3, margin: 10, marginLeft: 70, marginRight: 10, flex: 0.7,
+        backgroundColor: '#22010180', shadowColor: '#250101ff', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    },
+    shareButton: {
+        width: '30%', height: '40%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#610000ff', borderRadius: 100, marginTop: 10, marginBottom:10,
+        shadowColor: '#640303ff', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 10, elevation: 10,
+    },
+    cardContainer1: {
+        flexDirection: 'column', padding: 15, borderRadius: 3, margin: 10, marginLeft: 10, marginRight: 20, flex: 0.3,
+        backgroundColor: '#22010180', shadowColor: '#250101ff', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    },
+    contentRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 },
+    contentColumn: { flexDirection: 'column', justifyContent: 'space-between', paddingVertical: 4 },
+    backButton: { position: 'absolute', top: 20, left: 15, padding: 6, zIndex: 20 },
 });

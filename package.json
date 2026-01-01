@@ -9,5 +9,10 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "@react-native-community/slider": "5.0.1",
+    "expo": "^54.0.30",
+    "expo-av": "~16.0.8"
   }
 }

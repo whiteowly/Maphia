@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSocket } from '../context/SocketContext';
 
 const backgroundImage = require("../assets/images/background.jpeg");
@@ -9,7 +9,7 @@ const backgroundImage = require("../assets/images/background.jpeg");
 export default function Join() {
     const router = useRouter();
     const { socket } = useSocket();
-    const [text, onChangeText] = React.useState('');
+    const [text, onChangeText] = React.useState('ABC123');
 
     useEffect(() => {
         if (!socket) return;
@@ -19,13 +19,13 @@ export default function Join() {
             console.log("Successfully joined room:", roomData.code);
             // Pass the code to the lobby screen
             router.push({
-                pathname: '/lobby',
-                params: { roomCode: roomData.code }
+                pathname: '/game',
+                params: { roomCode: roomData.code, userId: roomData.userId }
             });
         });
         // Listen for errors (e.g., room doesn't exist)
         socket.on("JOIN_ERROR", (message) => {
-            alert(message); // "Room not found" or "Room is full"
+            Alert.alert("Error", message);
         });
 
         return () => {
@@ -35,11 +35,20 @@ export default function Join() {
     }, [socket]);
 
     const handleShare = () => {
-        if (text.length > 0 && socket) {
+        console.log("Button pressed. Current text:", text);
+        if (text.length === 0) {
+            Alert.alert("Error", "Please enter a room code");
+            return;
+        }
+        if (socket) {
+            const username = "Player" + Math.floor(Math.random() * 1000);
             // Send the code typed in the TextInput to the server
-            socket.emit("JOIN_GAME", text.trim().toUpperCase());
+            socket.emit("JOIN_GAME", {
+                roomCode: text.trim().toUpperCase(),
+                username
+            });
         } else {
-            alert("Please enter a room code");
+            console.log("Socket not connected");
         }
     };
 
@@ -57,9 +66,12 @@ export default function Join() {
 
                 <Text style={[styles.Text, {  fontSize: 20,  marginLeft: 10, marginTop: 20 }]}>Enter Room Code</Text>
                 <TextInput
-                    style={styles.input}
-                    value={text}
-                    onChangeText={onChangeText}
+                style={styles.input}
+                onChangeText={onChangeText} // This updates your 'text' state
+                value={text}
+                placeholder="Enter Room Code"
+                placeholderTextColor="#999"
+                autoCapitalize="characters" // Automatically makes it ABC123
                 />
             </View>
             <View style={{ alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>

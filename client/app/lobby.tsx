@@ -1,179 +1,153 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
-import { useRouter, useLocalSearchParams } from 'expo-router'; 
-import React, { useState, useEffect } from 'react';
-import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View, FlatList } from "react-native";
-import { useSocket } from '../context/SocketContext'; 
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { FlatList, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSocket } from '../context/SocketContext';
 
-const backgroundImage = require("../assets/images/lobby.png");
+const backgroundImage = require("../assets/images/background.jpeg");
 
-export default function Join() {
-   const router = useRouter();
-    const { socket } = useSocket(); 
-    const { roomCode } = useLocalSearchParams(); // Dynamic code from Join screen
-    const [players, setPlayers] = useState([]); 
+export default function Lobby() {
+  const router = useRouter();
+  const { socket } = useSocket();
+  const { roomCode, userId } = useLocalSearchParams();
+  const [players, setPlayers] = useState<any[]>([]);
 
-    useEffect(() => {
-        if (!socket) return;
+  useEffect(() => {
+    if (!socket) return;
 
-        // 1. Tell the server to send us the current list of players
-        socket.emit("GET_LOBBY_PLAYERS", roomCode);
+    // Listen for lobby updates (players joining/leaving)
+    socket.on('LOBBY_UPDATE', (updatedPlayers) => {
+      setPlayers(updatedPlayers);
+    });
 
-        // 2. Listen for the initial list
-        socket.on("ROOM_PLAYERS", (list) => {
-            setPlayers(list);
-        });
+    // Listen for game start
+    socket.on('GAME_STARTED', () => {
+      router.push({
+        pathname: '/game',
+        params: { roomCode, userId }
+      });
+    });
 
-        // 3. Listen for new players joining while you are on this screen
-        socket.on("PLAYER_JOINED", (newPlayer) => {
-            setPlayers((prev) => [...prev, newPlayer]);
-        });
+    return () => {
+      socket.off('LOBBY_UPDATE');
+      socket.off('GAME_STARTED');
+    };
+  }, [socket, roomCode, userId, router]);
 
-        return () => {
-            socket.off("ROOM_PLAYERS");
-            socket.off("PLAYER_JOINED");
-        };
-    }, [socket]);
-    
-    return (
-        <ImageBackground  source={backgroundImage} style={styles.background}>
-            <StatusBar hidden={true} />
-           
-            <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave Lobby</Text>
-            </Pressable>
+  const handleStartGame = () => {
+    socket?.emit('START_GAME', { roomCode });
+  };
 
-            <Text style={[styles.Text, { marginBottom: 0,fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
- <View style={styles.cardContainer1} >
-                 <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 5, alignSelf: 'flex-start' }}>Players list</Text>
-                <View style={styles.contentColumn}>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop: 0 }}>Jer(host)</Text>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop: 0 }}>Jeri(You) ✅</Text>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop: 0 }}>Jerbear ✅</Text>
-                       
-                      </View>         
-                     
-            </View>
-          
-            <View style={styles.bottomRightContainer}>
-                <Pressable onPress={copyCode} accessibilityLabel="Copy room code" style={styles.roomPress}>
-                    <Text style={[styles.Text, { fontSize: 25 }]}>
-                        Room Code - {roomCode}
-                    </Text>
-                      <Text style={[styles.Text, { fontSize: 13 }]}>
-                        click to copy
-                    </Text>
-                    {copied ? (
-                        <Text style={[styles.Text, { fontSize: 14, marginTop: 4 }]}>Copied!</Text>
-                    ) : null}
-                </Pressable>
-                <TouchableOpacity
-                    style={styles.shareButton}
-                    onPress={handleShare}
-                    activeOpacity={1}
-                >
-                    <Link href="/roleRevealMaphia" style={[styles.Text, {  fontSize: 25 }]}>Ready✅</Link>
-                </TouchableOpacity>
-            </View>
-        </ImageBackground>
-    );
+  const handleLeave = () => {
+      // Optional: Emit leave event if your backend supports it
+      // socket?.emit('LEAVE_LOBBY', { roomCode, userId });
+      router.back();
+  };
+
+  return (
+    <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
+      <StatusBar hidden={true} />
+      <Pressable onPress={handleLeave} style={styles.backButton}>
+        <MaterialIcons name="arrow-back" size={30} color="white" />
+      </Pressable>
+
+      <View style={styles.container}>
+        <Text style={styles.title}>Lobby</Text>
+        <Text style={styles.roomCode}>Code: {roomCode}</Text>
+
+        <View style={styles.cardContainer}>
+          <Text style={styles.sectionTitle}>Players Joined</Text>
+          <FlatList
+            data={players}
+            keyExtractor={(item, index) => item.id || index.toString()}
+            renderItem={({ item }) => (
+              <Text style={styles.playerText}>{item.username || item.name || "Player"}</Text>
+            )}
+            ListEmptyComponent={<Text style={styles.waitingText}>Waiting for players...</Text>}
+          />
+        </View>
+
+        <TouchableOpacity style={styles.startButton} onPress={handleStartGame}>
+          <Text style={styles.startButtonText}>Start Game</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
 }
-const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: "cover",
-    },
-    Text: {
-        color: "white",
-        fontFamily: 'Gruesome',
-    },
-    cardContainer: {
-        // Flexbox: defines the layout of its children (title and contentRow)
-        flexDirection: 'column',
-        padding: 15,
-        borderRadius: 3,
-        margin: 10,
-        marginLeft: 200,
-        marginRight: 200,
-        backgroundColor: '#22010180', // Grey background
-        shadowColor: '#250101ff',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
 
-    },
-    cardContainer1: {
-    // Flexbox: defines the layout of its children (title and contentRow)
-    flexDirection: 'column', 
-    padding: 15,
-    
-    margin: 10,
-    marginLeft: 10,
-    marginRight: 600,
-    flex: 0.3,
-   
-    
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: "cover",
   },
-    contentColumn: {
-    // Flexbox: groups Item 1 and Item 2 to display them in a row
-    flexDirection: 'column', 
-    justifyContent: 'space-between',
-    paddingVertical: 4,
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: 60,
   },
-    shareButton: {
-        width: '80%', // Fixed width for the button area
-        height: '35%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#610000ff', // Solid darker red for the button background
-        borderRadius: 100,
-        marginTop: 10,
-        marginBottom: 16,
-        marginRight: 20,
-        // SHADOW/GLOW EFFECT (Crucial for the image's look)
-        shadowColor: '#640303ff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 1,
-        shadowRadius: 10,
-        elevation: 10, // Android shadow effect
-    },
-    backButton: {
-        position: 'absolute',
-        top: 20,
-        left: 15,
-        padding: 6,
-        zIndex: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    input: {
-        height: 40,
-        margin: 12,
-        borderWidth: 1,
-        padding: 10,
-        fontFamily: 'Gruesome',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 8,
-        fontSize: 20,
-        alignItems: 'center',
-    }
-    ,
-    bottomRightContainer: {
-        position: 'absolute',
-        right: 16,
-        bottom: 20,
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
-        zIndex: 20,
-    },
-    roomPress: {
-        marginBottom: 8,
-        alignItems: 'flex-end',
-    }
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 15,
+    padding: 6,
+    zIndex: 20,
+  },
+  title: {
+    fontFamily: 'Gruesome',
+    fontSize: 50,
+    color: 'white',
+    marginBottom: 10,
+  },
+  roomCode: {
+    fontFamily: 'Gruesome',
+    fontSize: 30,
+    color: '#ff9999',
+    marginBottom: 30,
+  },
+  cardContainer: {
+    width: '80%',
+    backgroundColor: '#22010180',
+    padding: 20,
+    borderRadius: 10,
+    minHeight: 200,
+    maxHeight: '50%',
+  },
+  sectionTitle: {
+    fontFamily: 'Gruesome',
+    fontSize: 24,
+    color: 'white',
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#610000',
+    paddingBottom: 5,
+  },
+  playerText: {
+    fontFamily: 'Gruesome',
+    fontSize: 20,
+    color: 'white',
+    marginVertical: 5,
+  },
+  waitingText: {
+    fontFamily: 'Gruesome',
+    fontSize: 18,
+    color: '#ccc',
+    fontStyle: 'italic',
+  },
+  startButton: {
+    marginTop: 40,
+    backgroundColor: '#610000ff',
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 50,
+    shadowColor: '#640303ff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  startButtonText: {
+    fontFamily: 'Gruesome',
+    fontSize: 30,
+    color: 'white',
+  },
 });

@@ -13,8 +13,8 @@ export default function Index() {
       <Text style={{fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 50}}>Maphia</Text>
       <Link href="/create" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Host a Game</Link>
       <Link href="/join" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Join</Link>
-      <Text style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Play Offline</Text>
-      <Text style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Settings</Text>
+      <Link href="/offline" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Play Offline</Link>
+      <Link href="/settings" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Settings</Link>
     </ImageBackground>
 
   );

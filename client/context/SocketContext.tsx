@@ -9,14 +9,16 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-  // Replace with your computer's local IP address
-  const socket = useMemo(() => io("http://192.168.12.1:3001", {
+ 
+  // CHECK SERVER LOGS: Use the IP labeled "Wi-Fi" or "Ethernet"
+  const socket = useMemo(() => io("http://192.168.1.5:3000", {
     transports: ['websocket'],
     autoConnect: true,
   }), []);
 
   useEffect(() => {
     socket.on('connect', () => console.log('Connected to Server:', socket.id));
+    socket.on('connect_error', (err) => console.log('Socket Connect Error:', err.message));
     socket.on('disconnect', () => console.log('Disconnected from Server'));
 
     return () => {
