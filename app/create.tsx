@@ -1,99 +1,291 @@
-
 import { MaterialIcons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
-import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import RedSelector from "./RedSelector";
-import RoomCodeShare from "./RoomCodeShare";
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, ImageBackground, Modal, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useGame } from './context/GameContext';
+import socketService from './services/socketService';
 import SliderComponent from './sliderComponent';
 import SliderMafia from "./sliderMafia";
+
 const backgroundImage = require("../assets/images/background.jpeg");
 
+// Time options in seconds (15s to 120s)
+const TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
 
 export default function Create() {
-     const handleShare = () => {
-        // Replace this with actual sharing logic (e.g., using Expo's Sharing API)
-        Alert.alert('Game Created', `Your game has been created successfully!`);
+  const router = useRouter();
+  const { settings, updateSettings, setIsHost, setMyPlayerId } = useGame();
+
+  // Local state for UI
+  const [playerCount, setPlayerCount] = useState(settings.maxPlayers || 7);
+  const [maphiaCount, setMaphiaCount] = useState(settings.maphiaCount || 2);
+  const [discussionTime, setDiscussionTime] = useState(60);
+  const [votingTime, setVotingTime] = useState(30);
+  const [playerName, setPlayerName] = useState('Host');
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  // Modal state for time pickers
+  const [showDiscussionPicker, setShowDiscussionPicker] = useState(false);
+  const [showVotingPicker, setShowVotingPicker] = useState(false);
+
+  // Calculate civilians
+  const civilianCount = playerCount - maphiaCount;
+
+  // Ensure mafia count is valid
+  useEffect(() => {
+    const maxAllowedMaphias = Math.min(3, playerCount - 2);
+    if (maphiaCount > maxAllowedMaphias) {
+      setMaphiaCount(Math.max(1, maxAllowedMaphias));
+    }
+  }, [playerCount, maphiaCount]);
+
+  const handleCreateGame = async () => {
+    setIsConnecting(true);
+
+    try {
+      // Connect to server
+      await socketService.connect();
+
+      // Create room
+      const gameSettings = {
+        maxPlayers: playerCount,
+        maphiaCount: maphiaCount,
+        discussionTimeSeconds: discussionTime,
+        votingTimeSeconds: votingTime,
       };
-     const router = useRouter();
-    return (
-        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
-            <StatusBar hidden={true} />
-            <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
-            </Pressable>
-         
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30,  alignSelf: 'flex-end', textAlign: 'right', marginRight: 30  }}>Maphia</Text>
-           <View style={styles.container}>
-            <View style={styles.cardContainer} >
-                 <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 4, alignSelf: 'flex-start' }}>Game rules</Text>
-                <View style={styles.contentRow}>
-                       <SliderComponent initialValue={7} />
-                          <SliderMafia initialValue={2} />
-                      </View>
-                       <View style={styles.contentRow}>
-                        <Text style={{ fontFamily: 'Gruesome', fontSize: 18, color: 'white', marginLeft: 10, marginTop:20 }}>Join Settings</Text>
-                        <Text style={{ fontFamily: 'Gruesome', fontSize: 18, color: 'white', marginLeft: 30, marginTop:20 }}>Discussion Time(min)</Text>
-                      </View>
-                      <View style={styles.contentRow}>
-                        <RoomCodeShare code="J27FX" />
-                        <RedSelector currentValue={2} onSelectPress={() => console.log('Selector clicked!')}/>
-                      </View>
-                   
+
+      socketService.createRoom(playerName, gameSettings, (response) => {
+        setIsConnecting(false);
+
+        if (response.success) {
+          // Update game context
+          updateSettings({
+            ...gameSettings,
+            roomCode: response.roomCode!,
+          });
+          setIsHost(true);
+          setMyPlayerId(response.playerId!);
+
+          // Navigate to lobby
+          router.push('/lobby');
+        } else {
+          Alert.alert('Error', response.error || 'Failed to create room');
+        }
+      });
+    } catch (error) {
+      setIsConnecting(false);
+      Alert.alert('Connection Error', 'Failed to connect to server. Make sure the server is running.');
+      console.error('Connection error:', error);
+    }
+  };
+
+  // Format time display
+  const formatTime = (seconds: number) => {
+    if (seconds >= 60) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    }
+    return `${seconds}s`;
+  };
+
+  // Time Picker Modal Component
+  const TimePickerModal = ({
+    visible,
+    onClose,
+    currentValue,
+    onSelect,
+    title
+  }: {
+    visible: boolean;
+    onClose: () => void;
+    currentValue: number;
+    onSelect: (value: number) => void;
+    title: string;
+  }) => (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <FlatList
+            data={TIME_OPTIONS}
+            keyExtractor={(item) => item.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.timeOption,
+                  currentValue === item && styles.selectedTimeOption,
+                ]}
+                onPress={() => {
+                  onSelect(item);
+                  onClose();
+                }}
+              >
+                <Text style={[
+                  styles.timeOptionText,
+                  currentValue === item && styles.selectedTimeOptionText,
+                ]}>
+                  {formatTime(item)}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </Pressable>
+    </Modal>
+  );
+
+  return (
+    <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
+      <StatusBar hidden={true} />
+      <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
+        <MaterialIcons name="arrow-back" size={30} color="white" />
+      </Pressable>
+
+      <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }}>Maphia</Text>
+
+      <View style={styles.container}>
+        {/* Game Rules Card */}
+        <View style={styles.cardContainer}>
+          <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 4, alignSelf: 'flex-start' }}>Game rules</Text>
+
+          <View style={styles.contentRow}>
+            <SliderComponent
+              initialValue={playerCount}
+              onValueChange={(value) => setPlayerCount(value)}
+            />
+            <SliderMafia
+              initialValue={maphiaCount}
+              onValueChange={(value) => setMaphiaCount(value)}
+            />
+          </View>
+
+          {/* Time Settings Row */}
+          <View style={styles.timeSettingsRow}>
+            <View style={styles.timeSetting}>
+              <Text style={styles.timeLabel}>Discussion Time</Text>
+              <TouchableOpacity
+                style={styles.timeSelector}
+                onPress={() => setShowDiscussionPicker(true)}
+              >
+                <Text style={styles.timeSelectorText}>{formatTime(discussionTime)}</Text>
+                <MaterialIcons name="arrow-drop-down" size={24} color="#FF4444" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.cardContainer1} >
-                 <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 5, alignSelf: 'flex-start' }}>Roles</Text>
-                <View style={styles.contentColumn}>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop:20 }}>7 Players</Text>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop:20 }}>2 Maphias</Text>
-                       <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop:20 }}>5 Civilians</Text>
-                       
-                      </View>         
-                     
+
+            <View style={styles.timeSetting}>
+              <Text style={styles.timeLabel}>Voting Time</Text>
+              <TouchableOpacity
+                style={styles.timeSelector}
+                onPress={() => setShowVotingPicker(true)}
+              >
+                <Text style={styles.timeSelectorText}>{formatTime(votingTime)}</Text>
+                <MaterialIcons name="arrow-drop-down" size={24} color="#FF4444" />
+              </TouchableOpacity>
             </View>
-            
+          </View>
+
+          {/* Server Status */}
+          <View style={styles.serverStatus}>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 12, color: '#888' }}>
+              Server: localhost:3001
+            </Text>
+          </View>
+        </View>
+
+        {/* Roles Card - Dynamic! */}
+        <View style={styles.cardContainer1}>
+          <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 5, alignSelf: 'flex-start' }}>Roles</Text>
+          <View style={styles.contentColumn}>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop: 20 }}>
+              {playerCount} Players
+            </Text>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#FF6B6B', marginLeft: 10, marginTop: 20 }}>
+              {maphiaCount} Maphia{maphiaCount > 1 ? 's' : ''}
+            </Text>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#7BFF7B', marginLeft: 10, marginTop: 20 }}>
+              {civilianCount} Civilian{civilianCount > 1 ? 's' : ''}
+            </Text>
+          </View>
+
+          {/* Game Settings Summary */}
+          <View style={styles.settingsSummary}>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 14, color: '#AAAAAA', marginTop: 10 }}>
+              Discussion: {formatTime(discussionTime)}
+            </Text>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 14, color: '#AAAAAA', marginTop: 5 }}>
+              Voting: {formatTime(votingTime)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={{ alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
+        <TouchableOpacity
+          style={[styles.shareButton, isConnecting && styles.disabledButton]}
+          onPress={handleCreateGame}
+          activeOpacity={0.8}
+          disabled={isConnecting}
+        >
+          {isConnecting ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="white" size="small" />
+              <Text style={{ fontFamily: 'Gruesome', fontSize: 24, color: 'white', marginLeft: 10 }}>Connecting...</Text>
             </View>
-              <View style={{ alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>  
-                          <TouchableOpacity
-                                style={styles.shareButton}
-                                onPress={handleShare}
-                                activeOpacity={1}
-                              >
-                                <Link href= '/roleRevealCiv' style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white',  }}>Create Game</Link>
-                              </TouchableOpacity>      
-                      </View>   
-        </ImageBackground>
-    );
+          ) : (
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white' }}>Create Game</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Time Picker Modals */}
+      <TimePickerModal
+        visible={showDiscussionPicker}
+        onClose={() => setShowDiscussionPicker(false)}
+        currentValue={discussionTime}
+        onSelect={setDiscussionTime}
+        title="Discussion Time"
+      />
+      <TimePickerModal
+        visible={showVotingPicker}
+        onClose={() => setShowVotingPicker(false)}
+        currentValue={votingTime}
+        onSelect={setVotingTime}
+        title="Voting Time"
+      />
+    </ImageBackground>
+  );
 }
+
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: "cover",
-    },
-    Text: {
-        color: "white",
-        fontSize: 30,
-        fontWeight: "bold",
-    },
-    container: {
-        flex: 1,
-        flexDirection: 'row', 
-        marginTop: 5,
-        marginBottom: 50,
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        marginLeft: 10,
-        marginRight: 10,
-    },
-    cardContainer: {
-    // Flexbox: defines the layout of its children (title and contentRow)
-    flexDirection: 'column', 
+  background: {
+    flex: 1,
+    resizeMode: "cover",
+  },
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+    marginTop: 5,
+    marginBottom: 50,
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginLeft: 10,
+    marginRight: 10,
+  },
+  cardContainer: {
+    flexDirection: 'column',
     padding: 15,
-    borderRadius: 3,
+    borderRadius: 8,
     margin: 10,
     marginLeft: 70,
     marginRight: 10,
     flex: 0.7,
-    backgroundColor: '#22010180', // Grey background
+    backgroundColor: '#22010180',
     shadowColor: '#250101ff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -101,31 +293,36 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   shareButton: {
-    width: '30%', // Fixed width for the button area
+    width: '30%',
     height: '40%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#610000ff', // Solid darker red for the button background
+    backgroundColor: '#610000ff',
     borderRadius: 100,
     marginTop: 10,
-    marginBottom:10,
-    // SHADOW/GLOW EFFECT (Crucial for the image's look)
-    shadowColor: '#640303ff', 
+    marginBottom: 10,
+    shadowColor: '#640303ff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, 
-    shadowRadius: 10, 
-    elevation: 10, // Android shadow effect
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#444444',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   cardContainer1: {
-    // Flexbox: defines the layout of its children (title and contentRow)
-    flexDirection: 'column', 
+    flexDirection: 'column',
     padding: 15,
-    borderRadius: 3,
+    borderRadius: 8,
     margin: 10,
     marginLeft: 10,
     marginRight: 20,
     flex: 0.3,
-    backgroundColor: '#22010180', // Grey background
+    backgroundColor: '#22010180',
     shadowColor: '#250101ff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -133,26 +330,113 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   contentRow: {
-    // Flexbox: groups Item 1 and Item 2 to display them in a row
-    flexDirection: 'row', 
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 4,
   },
-    contentColumn: {
-    // Flexbox: groups Item 1 and Item 2 to display them in a row
-    flexDirection: 'column', 
+  contentColumn: {
+    flexDirection: 'column',
     justifyContent: 'space-between',
     paddingVertical: 4,
   },
-  smallerCard:{
- 
-  }
-  ,
+  settingsSummary: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+  },
   backButton: {
     position: 'absolute',
     top: 20,
     left: 15,
     padding: 6,
     zIndex: 20,
-  }
+  },
+  timeSettingsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  timeSetting: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  timeLabel: {
+    fontFamily: 'Gruesome',
+    fontSize: 16,
+    color: 'white',
+    marginBottom: 8,
+  },
+  timeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(50, 0, 0, 0.6)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 0, 0, 0.5)',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    shadowColor: '#FF0000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  timeSelectorText: {
+    fontFamily: 'Gruesome',
+    fontSize: 18,
+    color: '#FF4444',
+  },
+  serverStatus: {
+    marginTop: 15,
+    alignItems: 'center',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a0000',
+    borderRadius: 15,
+    padding: 20,
+    width: 200,
+    borderWidth: 1,
+    borderColor: '#FF0000',
+    shadowColor: '#FF0000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+  },
+  modalTitle: {
+    fontFamily: 'Gruesome',
+    fontSize: 22,
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  timeOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    marginVertical: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  selectedTimeOption: {
+    backgroundColor: 'rgba(255, 0, 0, 0.3)',
+    borderWidth: 1,
+    borderColor: '#FF4444',
+  },
+  timeOptionText: {
+    fontFamily: 'Gruesome',
+    fontSize: 18,
+    color: '#AAAAAA',
+    textAlign: 'center',
+  },
+  selectedTimeOptionText: {
+    color: '#FF4444',
+  },
 });

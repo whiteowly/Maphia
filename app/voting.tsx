@@ -1,52 +1,183 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
-import React from 'react';
-import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useGame } from './context/GameContext';
+import socketService, { Player, VotingResults } from './services/socketService';
+import { formatCountdown } from './types/game';
+
 const backgroundImage = require("../assets/images/lobby.png");
 
-export default function Join() {
+export default function Voting() {
     const router = useRouter();
-    const handleShare = () => {
-        router.push('/lobby');
+    const { settings, myRole, myPlayerId, setPhase } = useGame();
+
+    // State from socket
+    const [timeRemaining, setTimeRemaining] = useState(settings.votingTimeSeconds || 30);
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+    const [hasVoted, setHasVoted] = useState(false);
+    const [totalVotes, setTotalVotes] = useState(0);
+    const [totalVoters, setTotalVoters] = useState(0);
+
+    // Set up socket listeners
+    useEffect(() => {
+        // Listen for room updates (player list)
+        const unsubRoomUpdate = socketService.on('room_update', (data: any) => {
+            setPlayers(data.players);
+            // Count alive players as voters
+            const alive = data.players.filter((p: Player) => !p.isDead);
+            setTotalVoters(alive.length);
+        });
+
+        // Listen for timer updates
+        const unsubTimer = socketService.on('timer_update', (data: { timeRemaining: number }) => {
+            setTimeRemaining(data.timeRemaining);
+        });
+
+        // Listen for vote submitted (count update)
+        const unsubVote = socketService.on('vote_submitted', (data: { voterId: string; totalVotes: number; totalVoters: number }) => {
+            setTotalVotes(data.totalVotes);
+            setTotalVoters(data.totalVoters);
+        });
+
+        // Listen for voting results
+        const unsubResults = socketService.on('voting_results', (data: VotingResults) => {
+            setPhase('results');
+            router.replace({
+                pathname: '/revealUI',
+                params: {
+                    eliminated: data.eliminated || '',
+                    eliminatedName: data.eliminatedName || '',
+                    eliminatedRole: data.eliminatedRole || '',
+                    tie: data.tie ? 'true' : 'false',
+                },
+            });
+        });
+
+        // Listen for phase changes
+        const unsubPhase = socketService.on('phase_changed', (data: { phase: string; timeRemaining: number }) => {
+            if (data.phase === 'discussion') {
+                setPhase('discussion');
+                router.replace('/game');
+            }
+            setTimeRemaining(data.timeRemaining);
+        });
+
+        // Listen for game over
+        const unsubGameOver = socketService.on('game_over', (data: any) => {
+            setPhase('game_over');
+            router.replace({
+                pathname: '/revealUI',
+                params: {
+                    gameOver: 'true',
+                    winner: data.winner,
+                },
+            });
+        });
+
+        // Cleanup
+        return () => {
+            unsubRoomUpdate();
+            unsubTimer();
+            unsubVote();
+            unsubResults();
+            unsubPhase();
+            unsubGameOver();
+        };
+    }, []);
+
+    // Filter to alive players only
+    const alivePlayers = players.filter(p => !p.isDead);
+
+    const handleSelectPlayer = (playerId: string) => {
+        if (hasVoted) return;
+        if (playerId === myPlayerId) return; // Can't vote for yourself
+        setSelectedPlayer(playerId === selectedPlayer ? null : playerId);
     };
 
-    const players = [
-        { name: 'Jer (host)', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Jeri (You)', icon: { type: 'mc', name: 'hat-fedora' }, dead: false },
-        { name: 'Jerbear', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Jerry', icon: undefined, dead: true },
-        { name: 'Jerusalem', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Eyerus', icon: { type: 'mc', name: 'hat-fedora' }, dead: false },
-        { name: 'Eyerusalem', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'Eyu', icon: { type: 'mc', name: 'hat-fedora' }, dead: false },
-        { name: 'Jerbear2', icon: undefined, dead: true },
-        { name: 'J', icon: { type: 'ion', name: 'volume-high' }, dead: false },
-        { name: 'imoutofnames', icon: undefined, dead: true },
-        { name: 'welp', icon: undefined, dead: false },
-    ];
+    const handleConfirmVote = () => {
+        if (!selectedPlayer) {
+            Alert.alert('Select a player', 'Please select a player to vote for.');
+            return;
+        }
 
-    const leftPlayers = players.slice(0, 4);
-    const rightPlayers = players.slice(4, 8);
-    const centerPlayers = players.slice(8, 12);
+        socketService.submitVote(selectedPlayer, (response) => {
+            if (response.success) {
+                setHasVoted(true);
+            } else {
+                Alert.alert('Error', response.error || 'Failed to submit vote');
+            }
+        });
+    };
+
+    const handleSkipVote = () => {
+        socketService.submitVote(null, (response) => {
+            if (response.success) {
+                setHasVoted(true);
+                setSelectedPlayer(null);
+            }
+        });
+    };
+
+    const handleLeave = () => {
+        Alert.alert(
+            'Leave Game',
+            'Are you sure you want to leave the game?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Leave',
+                    style: 'destructive',
+                    onPress: () => {
+                        socketService.disconnect();
+                        router.replace('/');
+                    }
+                },
+            ]
+        );
+    };
+
+    // Get role display color
+    const roleColor = myRole === 'maphia' ? '#FF4444' : '#7BFF7B';
+    const roleText = myRole === 'maphia' ? 'Maphia' : 'Civilian';
+
+    // Timer warning color (red when < 10 seconds)
+    const timerColor = timeRemaining < 10 ? '#FF4444' : 'white';
+
+    // Split players into columns for display
+    const columns = [
+        alivePlayers.slice(0, Math.ceil(alivePlayers.length / 3)),
+        alivePlayers.slice(Math.ceil(alivePlayers.length / 3), Math.ceil(alivePlayers.length * 2 / 3)),
+        alivePlayers.slice(Math.ceil(alivePlayers.length * 2 / 3)),
+    ].filter(col => col.length > 0);
 
     return (
         <ImageBackground blurRadius={8} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
 
-            <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
+            <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Leave game">
                 <MaterialIcons name="arrow-back" size={30} color="white" />
                 <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave game</Text>
             </Pressable>
 
             <View>
-                <Text style={[styles.topCenterText, { fontSize: 26 }]}>Time Remaining - 01:16</Text>
-                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Role - Maphia</Text>
+                {/* Timer */}
+                <Text style={[styles.topCenterText, { fontSize: 26, color: timerColor }]}>
+                    Voting - {formatCountdown(timeRemaining)}
+                </Text>
 
+                {/* Role Display */}
+                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>
+                    Role - <Text style={{ color: roleColor }}>{roleText}</Text>
+                </Text>
+
+                {/* Voting Area */}
                 <View style={styles.cardContainer}>
-                  
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 21, color: 'white', marginTop: 0, alignSelf: 'center' }}>Who do you want to vote for?</Text>
+                    <Text style={{ fontFamily: 'Gruesome', fontSize: 21, color: 'white', marginTop: 0, alignSelf: 'center' }}>
+                        {hasVoted ? 'Waiting for other players...' : 'Who do you want to vote for?'}
+                    </Text>
+
                     <ScrollView
                         style={styles.playersScroll}
                         contentContainerStyle={styles.playersScrollContent}
@@ -54,67 +185,81 @@ export default function Join() {
                         nestedScrollEnabled={true}
                     >
                         <View style={styles.playersColumnsRow}>
-                            <View style={styles.playerColumn}>
-                            {leftPlayers.map((p, i) => (
-                                <View key={i} style={styles.playerCard}>
-                                    <View style={styles.playerRow}>
-                                        {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                        <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                        {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
-                                    </View>
-                                    <Text style={[styles.playerSubText, p.dead ? styles.deadText : null]}>{p.dead ? ' ' : 'Jer'}</Text>
-                                </View>
-                            ))}
-                        </View>
+                            {columns.map((column, colIndex) => (
+                                <View key={colIndex} style={styles.playerColumn}>
+                                    {column.map((p) => {
+                                        const isMe = p.id === myPlayerId;
+                                        const isSelected = selectedPlayer === p.id;
 
-                        <View style={styles.playerColumn}>
-                            {rightPlayers.map((p, i) => (
-                                <View key={i} style={styles.playerCard}>
-                                    <View style={styles.playerRow}>
-                                        {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                        <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                        {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
-                                    </View>
-                                    <Text style={[styles.playerSubText, p.dead ? styles.deadText : null]}>{p.dead ? ' ' : 'Jer'}</Text>
+                                        return (
+                                            <TouchableOpacity
+                                                key={p.id}
+                                                style={[
+                                                    styles.playerCard,
+                                                    isSelected && styles.selectedCard,
+                                                    hasVoted && styles.disabledCard,
+                                                    isMe && styles.myCard,
+                                                ]}
+                                                onPress={() => handleSelectPlayer(p.id)}
+                                                disabled={hasVoted || isMe}
+                                                activeOpacity={0.7}
+                                            >
+                                                <View style={styles.playerRow}>
+                                                    <Text style={[
+                                                        styles.playerText,
+                                                        isMe && styles.meText,
+                                                    ]}>
+                                                        {p.name}
+                                                        {isMe && ' (You)'}
+                                                    </Text>
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
                                 </View>
                             ))}
-                            </View>
-                            
-                        <View style={styles.playerColumn}>
-                            {centerPlayers.map((p, i) => (
-                                <View key={i} style={styles.playerCard}>
-                                    <View style={styles.playerRow}>
-                                        {p.icon?.type === 'mc' ? <Icon name={p.icon.name as any} size={18} color="white" style={styles.iconBefore} /> : null}
-                                        <Text style={[styles.playerText, p.dead ? styles.deadText : null]}>{p.name}</Text>
-                                        {p.icon?.type === 'ion' ? <Ionicons name={p.icon.name as any} size={18} color="white" style={styles.iconAfter} /> : null}
-                                    </View>
-                                    <Text style={[styles.playerSubText, p.dead ? styles.deadText : null]}>{p.dead ? ' ' : 'Jer'}</Text>
-                                </View>
-                            ))}
-                            </View>
-
-                        
                         </View>
                     </ScrollView>
                 </View>
             </View>
 
-               <View style={styles.bottomRightContainer}>
-                          
-                              <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
-                                  9/9 voted
-                              </Text>
-                          <TouchableOpacity
-                              style={styles.shareButton}
-                              onPress={handleShare}
-                              activeOpacity={1}
-                          >
-                              <Link href="/revealUI" style={[styles.Text, {  fontSize: 25 }]}>Mute</Link>
-                          </TouchableOpacity>
-                      </View>
+            {/* Bottom Controls */}
+            <View style={styles.bottomRightContainer}>
+                <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
+                    {totalVotes}/{totalVoters} voted
+                </Text>
+
+                {!hasVoted ? (
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity
+                            style={styles.skipButton}
+                            onPress={handleSkipVote}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={[styles.Text, { fontSize: 20 }]}>Skip</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.voteButton, !selectedPlayer && styles.disabledButton]}
+                            onPress={handleConfirmVote}
+                            activeOpacity={0.8}
+                            disabled={!selectedPlayer}
+                        >
+                            <Text style={[styles.Text, { fontSize: 20 }]}>Vote</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.waitingContainer}>
+                        <Text style={[styles.Text, { fontSize: 18, color: '#7BFF7B' }]}>
+                            ✓ Vote submitted
+                        </Text>
+                    </View>
+                )}
+            </View>
         </ImageBackground>
     );
 }
+
 const styles = StyleSheet.create({
     background: {
         flex: 1,
@@ -125,7 +270,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Gruesome',
     },
     cardContainer: {
-        // Flexbox: defines the layout of its children (title and contentRow)
         flexDirection: 'column',
         alignItems: 'center',
         padding: 15,
@@ -133,52 +277,43 @@ const styles = StyleSheet.create({
         margin: 0,
         marginLeft: 150,
         marginRight: 150,
-        backgroundColor: 'transparent', // Grey background
-        shadowColor: '#250101ff',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-
+        backgroundColor: 'transparent',
     },
-    cardContainer1: {
-        // Flexbox: defines the layout of its children (title and contentRow)
-        flexDirection: 'column',
-        padding: 15,
-
-        margin: 10,
-        marginLeft: 10,
-        marginRight: 600,
-        flex: 0.3,
-
-
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    contentColumn: {
-        // Flexbox: groups Item 1 and Item 2 to display them in a row
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        paddingVertical: 4,
-    },
-    shareButton: {
-        width: 120, // Fixed width for the button area
+    skipButton: {
+        width: 100,
         height: 40,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#610000ff', // Solid darker red for the button background
+        backgroundColor: '#444444',
         borderRadius: 100,
         marginTop: 10,
-        marginBottom: 16,
-        marginRight: 20,
-        // SHADOW/GLOW EFFECT (Crucial for the image's look)
+        marginRight: 10,
+    },
+    voteButton: {
+        width: 100,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#610000ff',
+        borderRadius: 100,
+        marginTop: 10,
         shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,
         shadowRadius: 10,
-        elevation: 10, // Android shadow effect
+        elevation: 10,
+    },
+    disabledButton: {
+        backgroundColor: '#333333',
+        shadowOpacity: 0,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+    },
+    waitingContainer: {
+        marginTop: 10,
     },
     backButton: {
         position: 'absolute',
@@ -189,100 +324,40 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    input: {
-        height: 40,
-        margin: 12,
-        borderWidth: 1,
-        padding: 10,
-        fontFamily: 'Gruesome',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 8,
-        fontSize: 20,
-        alignItems: 'center',
-    }
-    ,
     bottomRightContainer: {
-
         position: 'absolute',
         bottom: 20,
         right: 16,
         alignItems: 'flex-end',
         justifyContent: 'flex-end',
-
-    },
-    roomPress: {
-        marginBottom: 8,
-        alignItems: 'flex-end',
-    }
-    ,
-    playersList: {
-        flexDirection: 'column',
-        paddingHorizontal: 8,
-        marginTop: 6,
     },
     playersColumnsRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         paddingHorizontal: 8,
         marginTop: 6,
     },
     playerColumn: {
-        flex: 0.5,
+        flex: 1,
         paddingHorizontal: 8,
         alignItems: 'center',
-        marginHorizontal: 12,
+        marginHorizontal: 6,
     },
     playerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 6,
-    },
-    iconBefore: {
-        marginRight: 8,
-    },
-    iconAfter: {
-        marginLeft: 8,
-    },
-    playersRowSingle: {
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        marginTop: 6,
-    },
-    playerChip: {
-        color: 'white',
-        fontFamily: 'Gruesome',
-        fontSize: 16,
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        marginRight: 6,
-        backgroundColor: 'rgba(255,255,255,0.04)',
-        borderRadius: 8,
     },
     playerText: {
         color: 'white',
         fontFamily: 'Gruesome',
-        fontSize: 20,
-        marginTop: 0,
-        marginBottom: 4,
+        fontSize: 18,
         textAlign: 'center',
-    }
-    ,
-    playerSubText: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.75)',
-        marginTop: 0,
-        fontFamily: 'Gruesome',
-        textAlign: 'center',
-    }
-    ,
-    deadText: {
-        color: 'gray',
-    }
-    ,
+    },
+    meText: {
+        color: '#FFD700',
+    },
     topCenterText: {
         position: 'absolute',
         top: 20,
@@ -292,21 +367,33 @@ const styles = StyleSheet.create({
         color: 'white',
         fontFamily: 'Gruesome',
         zIndex: 20,
-    }
-    ,
+    },
     playerCard: {
-        backgroundColor: 'rgba(243, 215, 215, 0.03)',
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 60,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 30,
         marginVertical: 6,
-        minWidth: 200,
+        minWidth: 180,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: 'transparent',
+    },
+    selectedCard: {
+        borderColor: '#FF4444',
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    },
+    myCard: {
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+    },
+    disabledCard: {
+        opacity: 0.6,
     },
     playersScroll: {
         width: '100%',
-        maxHeight: 260,
+        maxHeight: 300,
         paddingHorizontal: 8,
         marginTop: 8,
     },
@@ -314,5 +401,4 @@ const styles = StyleSheet.create({
         paddingBottom: 12,
         alignItems: 'center',
     },
- 
 });
