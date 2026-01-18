@@ -27,28 +27,22 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-  // [
-  //   "expo-font",
-  //   {
-  //     "fonts": ["./assets/fonts/Gruesome.ttf"]
-  //   }
-  // ],
-  [
-    "expo-router"
-  ],
-  [
-    "expo-splash-screen",
-    {
-      "image": "./assets/images/splash-icon.png",
-      "imageWidth": 200,
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff",
-      "dark": {
-        "backgroundColor": "#000000"
-      }
-    }
-  ]
-],
+      [
+        "expo-router"
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
@@ -56,9 +50,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8c482a4f-d1b9-413c-a225-3a2a64a2b389"
+        "projectId": "63bd2055-8688-4c90-9e31-e4d7a3796c3c"
       }
     },
-    "owner": "jerobin"
+    "owner": "rkebede"
   }
 }
