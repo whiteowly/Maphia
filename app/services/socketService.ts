@@ -1,38 +1,11 @@
-<<<<<<< HEAD
-import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 
-// Determine server URL dynamically so devices/emulators can connect
-function resolveServerUrl() {
-    // Default host
-    let host = 'localhost';
-
-    try {
-        // When running in Expo, debuggerHost contains <ip>:<port>
-        const dbgHost = (Constants as any)?.manifest?.debuggerHost || (Constants as any)?.manifest2?.debuggerHost;
-        if (dbgHost) {
-            host = String(dbgHost).split(':')[0];
-        }
-    } catch (e) {
-        // ignore
-    }
-
-    // Android emulator mapping
-    if (Platform.OS === 'android' && (host === 'localhost' || host === '127.0.0.1')) {
-        host = '10.0.2.2'; // Android emulator uses this to reach host machine
-    }
-
-    return `http://${host}:3001`;
-}
-
-const SERVER_URL = resolveServerUrl();
-=======
-import { io, Socket } from 'socket.io-client';
-
-// Server URL - change this when deploying
-const SERVER_URL = 'http://localhost:3001';
->>>>>>> c584cec88d7640313aa50ad7cd622715a3f475ed
+// --- IMPORTANT: SERVER URL ---
+// If running on an Android Emulator, use 'http://10.0.2.2:3001'.
+// If running on a physical device, replace with your computer's local IP address.
+// (Find your IP by running 'ipconfig' on Windows or 'ifconfig' on macOS/Linux).
+// For iOS simulator, 'localhost' should work, but your IP is safer.
+export const SERVER_URL = 'http://192.168.1.6:3001'; // Using Android Emulator IP as a common default
 
 // Event types
 export type GamePhase = 'lobby' | 'role_reveal' | 'discussion' | 'voting' | 'results' | 'game_over';

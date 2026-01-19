@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
-import socketService from './services/socketService';
+import socketService, { SERVER_URL } from './services/socketService';
 
 const backgroundImage = require("../assets/images/background.jpeg");
 
@@ -96,7 +96,7 @@ export default function Join() {
                 {/* Server Status */}
                 <View style={styles.serverStatus}>
                     <Text style={{ fontFamily: 'Gruesome', fontSize: 12, color: '#888' }}>
-                        Server: localhost:3001
+                        Server: {SERVER_URL.replace('http://', '')}
                     </Text>
                 </View>
             </View>

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, ImageBackground, Modal, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
-import socketService from './services/socketService';
+import socketService, { SERVER_URL } from './services/socketService';
 import SliderComponent from './sliderComponent';
 import SliderMafia from "./sliderMafia";
 
@@ -74,7 +74,8 @@ export default function Create() {
       });
     } catch (error) {
       setIsConnecting(false);
-      Alert.alert('Connection Error', 'Failed to connect to server. Make sure the server is running.');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      Alert.alert('Connection Error', `Failed to connect to server: ${errorMessage}. Make sure the server is running and accessible.`);
       console.error('Connection error:', error);
     }
   };
@@ -193,7 +194,7 @@ export default function Create() {
           {/* Server Status */}
           <View style={styles.serverStatus}>
             <Text style={{ fontFamily: 'Gruesome', fontSize: 12, color: '#888' }}>
-              Server: localhost:3001
+              Server: {SERVER_URL.replace('http://', '')}
             </Text>
           </View>
         </View>
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   shareButton: {
-    width: '30%',
+    width: '10%',
     height: '40%',
     justifyContent: 'center',
     alignItems: 'center',
