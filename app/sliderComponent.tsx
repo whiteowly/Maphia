@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 // Import the Slider component
 import Slider from '@react-native-community/slider';
 
-// Define the shape of our component's props (if we needed custom props)
+// Define the shape of our component's props
 interface SliderProps {
   initialValue?: number;
+  onValueChange?: (value: number) => void;
 }
 
-const SliderComponent: React.FC<SliderProps> = ({ initialValue = 50 }) => {
+const SliderComponent: React.FC<SliderProps> = ({ initialValue = 7, onValueChange }) => {
   // Use TypeScript to define the state type as 'number'
   const [sliderValue, setSliderValue] = useState<number>(initialValue);
+
+  // Notify parent when value changes
+  useEffect(() => {
+    if (onValueChange) {
+      onValueChange(sliderValue);
+    }
+  }, [sliderValue, onValueChange]);
 
   return (
     <View style={styles.container}>
@@ -19,26 +27,24 @@ const SliderComponent: React.FC<SliderProps> = ({ initialValue = 50 }) => {
         Number of players: {sliderValue}
       </Text>
 
-      {/*  */}
-
       <Slider
         style={styles.slider}
-        
+
         // --- Required Props ---
         minimumValue={5}
-        maximumValue={12}
-        step={1} // Example: allow half-integer steps
-        
+        maximumValue={15}
+        step={1}
+
         // The value prop is bound to the state
-        value={sliderValue} 
-        
+        value={sliderValue}
+
         // The onValueChange prop is typed to receive a 'number'
         onValueChange={(value: number) => {
           setSliderValue(value);
         }}
 
         // --- Optional Styling Props ---
-        minimumTrackTintColor="#753e3eff" 
+        minimumTrackTintColor="#753e3eff"
         maximumTrackTintColor="#997676ff"
         thumbTintColor="#FF4500" // Orange thumb
       />

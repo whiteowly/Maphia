@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // We'll use the Ionicons component for the dropdown arrow
 import { Ionicons } from '@expo/vector-icons';
 
@@ -12,13 +12,10 @@ interface RedSelectorProps {
 
 // --- MAIN COMPONENT ---
 const RedSelector: React.FC<RedSelectorProps> = ({ currentValue, onSelectPress }) => {
-  
+
   // Define the function that will run when the selector is pressed
   const handlePress = () => {
     onSelectPress();
-    // Placeholder logic: In a real app, this would open a Modal or Bottom Sheet 
-    // containing the list of selectable options (e.g., 1, 2, 3, 4, etc.)
-    Alert.alert('Selector Pressed', 'A list of options would open here.');
   };
 
   return (
@@ -34,9 +31,9 @@ const RedSelector: React.FC<RedSelectorProps> = ({ currentValue, onSelectPress }
 
       {/* 2. DROPDOWN ARROW ICON */}
       <View style={styles.arrowWrapper}>
-        <Ionicons 
-          name="chevron-down-sharp" 
-          size={20} 
+        <Ionicons
+          name="chevron-down-sharp"
+          size={20}
           color="#FF0000" // Red color for the icon
         />
       </View>
@@ -53,7 +50,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 4,
     // Size and Shape
-    width: 180, 
+    width: 180,
     height: 35,
     borderRadius: 8,
     paddingHorizontal: 15,
@@ -61,7 +58,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(50, 0, 0, 0.4)', // Dark red background, subtle
     borderWidth: 0.5,
     borderColor: 'rgba(255, 0, 0, 0.5)', // Red border
-    
+
     // GLOW EFFECT (Subtle shadow on the whole box)
     shadowColor: '#FF0000',
     shadowOffset: { width: 0, height: 0 },
@@ -69,7 +66,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 0, // Android shadow
   },
-  
+
   valueWrapper: {
     flex: 1, // Takes up most of the space
     justifyContent: 'center',
@@ -77,7 +74,7 @@ const styles = StyleSheet.create({
   valueText: {
     color: '#FF4444', // Bright red color for the number
     fontSize: 20,
-   fontFamily: 'Gruesome',
+    fontFamily: 'Gruesome',
     // Text glow
     textShadowColor: 'rgba(255, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 0 },
