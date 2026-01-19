@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
@@ -26,6 +27,12 @@ function resolveServerUrl() {
 }
 
 const SERVER_URL = resolveServerUrl();
+=======
+import { io, Socket } from 'socket.io-client';
+
+// Server URL - change this when deploying
+const SERVER_URL = 'http://localhost:3001';
+>>>>>>> c584cec88d7640313aa50ad7cd622715a3f475ed
 
 // Event types
 export type GamePhase = 'lobby' | 'role_reveal' | 'discussion' | 'voting' | 'results' | 'game_over';

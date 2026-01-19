@@ -43,6 +43,7 @@
         }
       ]
     ],
+<<<<<<< HEAD
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
@@ -106,6 +107,8 @@
     }
   ]
 ],
+=======
+>>>>>>> c584cec88d7640313aa50ad7cd622715a3f475ed
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
@@ -113,9 +116,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8c482a4f-d1b9-413c-a225-3a2a64a2b389"
+        "projectId": "63bd2055-8688-4c90-9e31-e4d7a3796c3c"
       }
     },
-    "owner": "jerobin"
+    "owner": "rkebede"
   }
 }
