@@ -89,6 +89,8 @@ export default function Voting() {
 
     // Filter to alive players only
     const alivePlayers = players.filter(p => !p.isDead);
+    // Use all players for display (dead players will be visually disabled)
+    // const alivePlayers = players.filter(p => !p.isDead);
 
     const handleSelectPlayer = (playerId: string) => {
         if (hasVoted) return;
@@ -150,6 +152,9 @@ export default function Voting() {
         alivePlayers.slice(0, Math.ceil(alivePlayers.length / 3)),
         alivePlayers.slice(Math.ceil(alivePlayers.length / 3), Math.ceil(alivePlayers.length * 2 / 3)),
         alivePlayers.slice(Math.ceil(alivePlayers.length * 2 / 3)),
+        players.slice(0, Math.ceil(players.length / 3)),
+        players.slice(Math.ceil(players.length / 3), Math.ceil(players.length * 2 / 3)),
+        players.slice(Math.ceil(players.length * 2 / 3)),
     ].filter(col => col.length > 0);
 
     return (
@@ -190,6 +195,7 @@ export default function Voting() {
                                     {column.map((p) => {
                                         const isMe = p.id === myPlayerId;
                                         const isSelected = selectedPlayer === p.id;
+                                        const isDead = p.isDead;
 
                                         return (
                                             <TouchableOpacity
@@ -198,19 +204,23 @@ export default function Voting() {
                                                     styles.playerCard,
                                                     isSelected && styles.selectedCard,
                                                     hasVoted && styles.disabledCard,
+                                                    (hasVoted || isDead) && styles.disabledCard,
                                                     isMe && styles.myCard,
                                                 ]}
                                                 onPress={() => handleSelectPlayer(p.id)}
                                                 disabled={hasVoted || isMe}
+                                                disabled={hasVoted || isMe || isDead}
                                                 activeOpacity={0.7}
                                             >
                                                 <View style={styles.playerRow}>
                                                     <Text style={[
                                                         styles.playerText,
                                                         isMe && styles.meText,
+                                                        isDead && styles.deadText,
                                                     ]}>
                                                         {p.name}
                                                         {isMe && ' (You)'}
+                                                        {isDead && ' ☠️'}
                                                     </Text>
                                                 </View>
                                             </TouchableOpacity>
@@ -357,6 +367,10 @@ const styles = StyleSheet.create({
     },
     meText: {
         color: '#FFD700',
+    },
+    deadText: {
+        color: 'gray',
+        textDecorationLine: 'line-through',
     },
     topCenterText: {
         position: 'absolute',
