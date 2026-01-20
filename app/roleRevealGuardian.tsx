@@ -3,22 +3,19 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Animated, Image, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
-import socketService, { RoleAssignment } from './services/socketService';
+import socketService from './services/socketService';
 
 const backgroundImage = require("../assets/images/lobby.png");
 
-const RoleRevealMaphia = () => {
+const RoleRevealGuardian = () => {
     const router = useRouter();
-    const { settings, setPhase } = useGame();
+    const { setPhase } = useGame();
 
-    // Animation for dramatic reveal
     const [fadeAnim] = useState(new Animated.Value(0));
     const [scaleAnim] = useState(new Animated.Value(0.5));
     const [canContinue, setCanContinue] = useState(false);
-    const [teammates, setTeammates] = useState<{ id: string; name: string }[]>([]);
 
     useEffect(() => {
-        // Animate the reveal
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -32,18 +29,9 @@ const RoleRevealMaphia = () => {
             }),
         ]).start();
 
-        // Enable continue button after animation
         const timer = setTimeout(() => setCanContinue(true), 2000);
 
-        // Listen for role assignment to get teammates
-        const unsubRole = socketService.on('role_assigned', (data: RoleAssignment) => {
-            if (data.teammates) {
-                setTeammates(data.teammates);
-            }
-        });
-
-        // Listen for phase change (game start)
-        const unsubPhase = socketService.on('phase_changed', (data: { phase: string; timeRemaining: number }) => {
+        const unsubPhase = socketService.on('phase_changed', (data: { phase: string }) => {
             if (data.phase === 'night') {
                 setPhase('night');
                 router.replace('/night');
@@ -52,14 +40,12 @@ const RoleRevealMaphia = () => {
 
         return () => {
             clearTimeout(timer);
-            unsubRole();
             unsubPhase();
         };
     }, []);
 
     const handleContinue = () => {
         socketService.continueFromReveal();
-        // The phase_changed event will navigate us
     };
 
     const handleQuit = () => {
@@ -67,14 +53,11 @@ const RoleRevealMaphia = () => {
         router.replace('/');
     };
 
-    // Show other maphias
-    const otherMaphias = teammates.length;
-
     return (
         <ImageBackground source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
 
-            <Pressable onPress={handleQuit} style={styles.backButton} accessibilityLabel="Quit game">
+            <Pressable onPress={handleQuit} style={styles.backButton}>
                 <MaterialIcons name="arrow-back" size={30} color="white" />
                 <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Quit</Text>
             </Pressable>
@@ -85,34 +68,21 @@ const RoleRevealMaphia = () => {
                 <Animated.View style={[styles.cardReveal, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
                     <Image
                         style={styles.roleImage}
-                        source={require('../assets/images/roles/maphia.png')}
+                        source={require('../assets/images/roles/guardian.jpg')}
                     />
                 </Animated.View>
 
-                <Animated.Text style={[styles.roleText, { opacity: fadeAnim, color: '#FF4444' }]}>
-                    You are a Maphia!
+                <Animated.Text style={[styles.roleText, { opacity: fadeAnim, color: '#3B82F6' }]}>
+                    You are the Guardian Angel!
                 </Animated.Text>
 
-                {otherMaphias > 0 && (
-                    <View style={styles.teammatesContainer}>
-                        <Text style={styles.teamInfo}>
-                            Your teammate{otherMaphias > 1 ? 's' : ''}:
-                        </Text>
-                        {teammates.map((t) => (
-                            <Text key={t.id} style={styles.teammateName}>
-                                🔪 {t.name}
-                            </Text>
-                        ))}
-                    </View>
-                )}
-
                 <Text style={styles.roleDescription}>
-                    Eliminate civilians without getting caught!
+                    Save one player each night (not yourself). If you save a Maphia, you die!
                 </Text>
                 <Text style={styles.roleHint}>
-                    • Blend in during discussions{'\n'}
-                    • Coordinate with other Maphias{'\n'}
-                    • Eliminate civilians to win!
+                    • Choose wisely who to protect each night{'\n'}
+                    • You cannot save yourself{'\n'}
+                    • Saving a Maphia will kill you!
                 </Text>
 
                 <TouchableOpacity
@@ -130,7 +100,7 @@ const RoleRevealMaphia = () => {
     );
 };
 
-export default RoleRevealMaphia;
+export default RoleRevealGuardian;
 
 const styles = StyleSheet.create({
     background: {
@@ -159,34 +129,20 @@ const styles = StyleSheet.create({
     },
     roleText: {
         fontFamily: 'Gruesome',
-        fontSize: 36,
+        fontSize: 32,
         marginTop: 20,
-        textShadowColor: 'rgba(255, 0, 0, 0.5)',
+        textShadowColor: 'rgba(59, 130, 246, 0.5)',
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 15,
-    },
-    teammatesContainer: {
-        marginTop: 15,
-        alignItems: 'center',
-    },
-    teamInfo: {
-        fontFamily: 'Gruesome',
-        fontSize: 16,
-        color: '#FF6B6B',
         textAlign: 'center',
-    },
-    teammateName: {
-        fontFamily: 'Gruesome',
-        fontSize: 18,
-        color: '#FF4444',
-        marginTop: 5,
     },
     roleDescription: {
         fontFamily: 'Gruesome',
-        fontSize: 18,
+        fontSize: 16,
         color: '#CCCCCC',
         textAlign: 'center',
         marginTop: 15,
+        paddingHorizontal: 20,
     },
     roleHint: {
         fontFamily: 'Gruesome',
@@ -197,12 +153,12 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     continueButton: {
-        backgroundColor: '#610000',
+        backgroundColor: '#1E40AF',
         paddingHorizontal: 50,
         paddingVertical: 15,
         borderRadius: 50,
         marginTop: 30,
-        shadowColor: '#FF0000',
+        shadowColor: '#3B82F6',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.5,
         shadowRadius: 10,

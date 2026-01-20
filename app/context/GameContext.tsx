@@ -26,8 +26,8 @@ interface GameContextType {
     setTimeRemaining: (time: number) => void;
 
     // Current player role (for the local player)
-    myRole: 'maphia' | 'civilian' | null;
-    setMyRole: (role: 'maphia' | 'civilian' | null) => void;
+    myRole: 'maphia' | 'civilian' | 'guardian' | 'joker' | null;
+    setMyRole: (role: 'maphia' | 'civilian' | 'guardian' | 'joker' | null) => void;
 
     // Current player info
     myPlayerId: string | null;
@@ -36,6 +36,10 @@ interface GameContextType {
     // Is host
     isHost: boolean;
     setIsHost: (isHost: boolean) => void;
+
+    // Mafia teammates (for mafia players to know who their team is)
+    maphiaTeammates: { id: string; name: string }[];
+    setMaphiaTeammates: (teammates: { id: string; name: string }[]) => void;
 
     // Reset game
     resetGame: () => void;
@@ -55,9 +59,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [phase, setPhase] = useState<GameState['phase']>('lobby');
     const [currentRound, setCurrentRound] = useState(1);
     const [timeRemaining, setTimeRemaining] = useState(0);
-    const [myRole, setMyRole] = useState<'maphia' | 'civilian' | null>(null);
+    const [myRole, setMyRole] = useState<'maphia' | 'civilian' | 'guardian' | 'joker' | null>(null);
     const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
     const [isHost, setIsHost] = useState(false);
+    const [maphiaTeammates, setMaphiaTeammates] = useState<{ id: string; name: string }[]>([]);
 
     const updateSettings = (updates: Partial<GameSettings>) => {
         setSettings(prev => ({ ...prev, ...updates }));
@@ -90,6 +95,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setMyRole(null);
         setMyPlayerId(null);
         setIsHost(false);
+        setMaphiaTeammates([]);
     };
 
     const initializeGame = (newSettings: Partial<GameSettings>) => {
@@ -124,6 +130,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setMyPlayerId,
                 isHost,
                 setIsHost,
+                maphiaTeammates,
+                setMaphiaTeammates,
                 resetGame,
                 initializeGame,
             }}

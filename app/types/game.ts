@@ -6,7 +6,7 @@ export interface Player {
     isHost: boolean;
     isReady: boolean;
     isDead: boolean;
-    role?: 'maphia' | 'civilian';
+    role?: 'maphia' | 'civilian' | 'guardian' | 'joker';
     isMuted?: boolean;
 }
 
@@ -21,7 +21,7 @@ export interface GameSettings {
 export interface GameState {
     settings: GameSettings;
     players: Player[];
-    phase: 'lobby' | 'role_reveal' | 'discussion' | 'voting' | 'results' | 'game_over';
+    phase: 'lobby' | 'role_reveal' | 'night' | 'guardian' | 'discussion' | 'voting' | 'results' | 'game_over';
     currentRound: number;
     timeRemaining: number; // in seconds
     votedPlayer?: string; // player id being voted on

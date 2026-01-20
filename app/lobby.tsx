@@ -11,7 +11,7 @@ const backgroundImage = require("../assets/images/lobby.png");
 
 export default function Lobby() {
     const router = useRouter();
-    const { settings, isHost, myPlayerId, setMyRole, setPhase, updateSettings } = useGame();
+    const { settings, isHost, myPlayerId, setMyRole, setPhase, updateSettings, setMaphiaTeammates } = useGame();
 
     // State from socket
     const [players, setPlayers] = useState<Player[]>([]);
@@ -55,11 +55,24 @@ export default function Lobby() {
             setMyRole(data.role);
             setPhase('role_reveal');
 
-            // Navigate to role reveal screen
-            if (data.role === 'maphia') {
-                router.replace('/roleRevealMaphia');
-            } else {
-                router.replace('/roleRevealCiv');
+            // Store teammates for mafia players (used to filter night targets)
+            if (data.role === 'maphia' && data.teammates) {
+                setMaphiaTeammates(data.teammates);
+            }
+
+            // Navigate to role reveal screen based on role
+            switch (data.role) {
+                case 'maphia':
+                    router.replace('/roleRevealMaphia');
+                    break;
+                case 'guardian':
+                    router.replace('/roleRevealGuardian');
+                    break;
+                case 'joker':
+                    router.replace('/roleRevealJoker');
+                    break;
+                default:
+                    router.replace('/roleRevealCiv');
             }
         });
 

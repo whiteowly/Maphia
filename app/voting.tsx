@@ -10,7 +10,7 @@ const backgroundImage = require("../assets/images/lobby.png");
 
 export default function Voting() {
     const router = useRouter();
-    const { settings, myRole, myPlayerId, setPhase } = useGame();
+    const { settings, myRole, myPlayerId, setPhase, maphiaTeammates } = useGame();
 
     // State from socket
     const [timeRemaining, setTimeRemaining] = useState(settings.votingTimeSeconds || 30);
@@ -19,6 +19,8 @@ export default function Voting() {
     const [hasVoted, setHasVoted] = useState(false);
     const [totalVotes, setTotalVotes] = useState(0);
     const [totalVoters, setTotalVoters] = useState(0);
+    // Track who each player voted for
+    const [playerVotes, setPlayerVotes] = useState<Record<string, string>>({}); // voterId -> targetName
 
     // Set up socket listeners
     useEffect(() => {
@@ -35,10 +37,20 @@ export default function Voting() {
             setTimeRemaining(data.timeRemaining);
         });
 
-        // Listen for vote submitted (count update)
-        const unsubVote = socketService.on('vote_submitted', (data: { voterId: string; totalVotes: number; totalVoters: number }) => {
+        // Listen for vote submitted (count update AND who voted for whom)
+        const unsubVote = socketService.on('vote_submitted', (data: {
+            voterId: string;
+            targetName: string;
+            totalVotes: number;
+            totalVoters: number
+        }) => {
             setTotalVotes(data.totalVotes);
             setTotalVoters(data.totalVoters);
+            // Track who this player voted for
+            setPlayerVotes(prev => ({
+                ...prev,
+                [data.voterId]: data.targetName
+            }));
         });
 
         // Listen for voting results
@@ -60,6 +72,9 @@ export default function Voting() {
             if (data.phase === 'discussion') {
                 setPhase('discussion');
                 router.replace('/game');
+            } else if (data.phase === 'night') {
+                setPhase('night');
+                router.replace('/night');
             }
             setTimeRemaining(data.timeRemaining);
         });
@@ -140,21 +155,33 @@ export default function Voting() {
         );
     };
 
-    // Get role display color
-    const roleColor = myRole === 'maphia' ? '#FF4444' : '#7BFF7B';
-    const roleText = myRole === 'maphia' ? 'Maphia' : 'Civilian';
+    // Get role display color and text
+    const getRoleDisplay = () => {
+        switch (myRole) {
+            case 'maphia':
+                return { color: '#FF4444', text: 'Maphia' };
+            case 'guardian':
+                return { color: '#3B82F6', text: 'Guardian Angel' };
+            case 'joker':
+                return { color: '#EC4899', text: 'Joker' };
+            default:
+                return { color: '#7BFF7B', text: 'Civilian' };
+        }
+    };
+    const roleDisplay = getRoleDisplay();
 
     // Timer warning color (red when < 10 seconds)
     const timerColor = timeRemaining < 10 ? '#FF4444' : 'white';
 
-    // Split players into columns for display
+    // Split players into columns for display (show all players, dead ones are visually disabled)
+    const displayPlayers = players; // Show all players
+    const numColumns = 3;
+    const playersPerColumn = Math.ceil(displayPlayers.length / numColumns);
+
     const columns = [
-        alivePlayers.slice(0, Math.ceil(alivePlayers.length / 3)),
-        alivePlayers.slice(Math.ceil(alivePlayers.length / 3), Math.ceil(alivePlayers.length * 2 / 3)),
-        alivePlayers.slice(Math.ceil(alivePlayers.length * 2 / 3)),
-        players.slice(0, Math.ceil(players.length / 3)),
-        players.slice(Math.ceil(players.length / 3), Math.ceil(players.length * 2 / 3)),
-        players.slice(Math.ceil(players.length * 2 / 3)),
+        displayPlayers.slice(0, playersPerColumn),
+        displayPlayers.slice(playersPerColumn, playersPerColumn * 2),
+        displayPlayers.slice(playersPerColumn * 2),
     ].filter(col => col.length > 0);
 
     return (
@@ -174,7 +201,7 @@ export default function Voting() {
 
                 {/* Role Display */}
                 <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>
-                    Role - <Text style={{ color: roleColor }}>{roleText}</Text>
+                    Role - <Text style={{ color: roleDisplay.color }}>{roleDisplay.text}</Text>
                 </Text>
 
                 {/* Voting Area */}
@@ -196,6 +223,10 @@ export default function Voting() {
                                         const isMe = p.id === myPlayerId;
                                         const isSelected = selectedPlayer === p.id;
                                         const isDead = p.isDead;
+                                        const votedFor = playerVotes[p.id]; // Who this player voted for
+                                        // Check if this player is a mafia teammate (only visible to mafia)
+                                        const isMaphiaTeammate = myRole === 'maphia' &&
+                                            maphiaTeammates.some(t => t.id === p.id);
 
                                         return (
                                             <TouchableOpacity
@@ -208,20 +239,32 @@ export default function Voting() {
                                                     isMe && styles.myCard,
                                                 ]}
                                                 onPress={() => handleSelectPlayer(p.id)}
-                                                disabled={hasVoted || isMe}
                                                 disabled={hasVoted || isMe || isDead}
                                                 activeOpacity={0.7}
                                             >
-                                                <View style={styles.playerRow}>
-                                                    <Text style={[
-                                                        styles.playerText,
-                                                        isMe && styles.meText,
-                                                        isDead && styles.deadText,
-                                                    ]}>
-                                                        {p.name}
-                                                        {isMe && ' (You)'}
-                                                        {isDead && ' ☠️'}
-                                                    </Text>
+                                                <View style={styles.playerCardContent}>
+                                                    <View style={styles.playerRow}>
+                                                        {/* Mafia hat icon - only visible to mafia players */}
+                                                        {isMaphiaTeammate && (
+                                                            <Text style={{ marginRight: 6 }}>🎩</Text>
+                                                        )}
+                                                        <Text style={[
+                                                            styles.playerText,
+                                                            isMe && styles.meText,
+                                                            isDead && styles.deadText,
+                                                        ]}>
+                                                            {p.name}
+                                                            {p.isHost && ' (Host)'}
+                                                            {isMe && ' (You)'}
+                                                            {isDead && ' ☠️'}
+                                                        </Text>
+                                                    </View>
+                                                    {/* Show who this player voted for */}
+                                                    {votedFor && (
+                                                        <Text style={styles.votedForText}>
+                                                            {votedFor}
+                                                        </Text>
+                                                    )}
                                                 </View>
                                             </TouchableOpacity>
                                         );
@@ -414,5 +457,15 @@ const styles = StyleSheet.create({
     playersScrollContent: {
         paddingBottom: 12,
         alignItems: 'center',
+    },
+    playerCardContent: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    votedForText: {
+        fontFamily: 'Gruesome',
+        fontSize: 14,
+        color: '#9CA3AF',
+        marginTop: 2,
     },
 });

@@ -36,9 +36,9 @@ const RoleRevealCiv = () => {
 
         // Listen for phase change (game start)
         const unsubPhase = socketService.on('phase_changed', (data: { phase: string; timeRemaining: number }) => {
-            if (data.phase === 'discussion') {
-                setPhase('discussion');
-                router.replace('/game');
+            if (data.phase === 'night') {
+                setPhase('night');
+                router.replace('/night');
             }
         });
 
@@ -73,7 +73,7 @@ const RoleRevealCiv = () => {
                 <Animated.View style={[styles.cardReveal, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
                     <Image
                         style={styles.roleImage}
-                        source={require('../assets/images/roleCiv.png')}
+                        source={require('../assets/images/roles/civilian.jpg')}
                     />
                 </Animated.View>
 

@@ -11,11 +11,10 @@ const backgroundImage = require("../assets/images/lobby.png");
 
 export default function Game() {
     const router = useRouter();
-    const { settings, myRole, myPlayerId, setPhase } = useGame();
+    const { settings, myRole, myPlayerId, setPhase, players, setPlayers } = useGame();
 
     // State from socket
     const [timeRemaining, setTimeRemaining] = useState(settings.discussionTimeSeconds || 60);
-    const [players, setPlayers] = useState<Player[]>([]);
     const [isMuted, setIsMuted] = useState(false);
 
     // Set up socket listeners
@@ -35,6 +34,9 @@ export default function Game() {
             if (data.phase === 'voting') {
                 setPhase('voting');
                 router.replace('/voting');
+            } else if (data.phase === 'night') {
+                setPhase('night');
+                router.replace('/night');
             }
             setTimeRemaining(data.timeRemaining);
         });
@@ -79,9 +81,20 @@ export default function Game() {
     const leftPlayers = players.slice(0, Math.ceil(players.length / 2));
     const rightPlayers = players.slice(Math.ceil(players.length / 2));
 
-    // Get role display color
-    const roleColor = myRole === 'maphia' ? '#FF4444' : '#7BFF7B';
-    const roleText = myRole === 'maphia' ? 'Maphia' : 'Civilian';
+    // Get role display color and text
+    const getRoleDisplay = () => {
+        switch (myRole) {
+            case 'maphia':
+                return { color: '#FF4444', text: 'Maphia' };
+            case 'guardian':
+                return { color: '#3B82F6', text: 'Guardian Angel' };
+            case 'joker':
+                return { color: '#EC4899', text: 'Joker' };
+            default:
+                return { color: '#7BFF7B', text: 'Civilian' };
+        }
+    };
+    const roleDisplay = getRoleDisplay();
 
     // Timer warning color (red when < 15 seconds)
     const timerColor = timeRemaining < 15 ? '#FF4444' : 'white';
@@ -110,7 +123,7 @@ export default function Game() {
 
                 {/* Role Display */}
                 <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>
-                    Role - <Text style={{ color: roleColor }}>{roleText}</Text>
+                    Role - <Text style={{ color: roleDisplay.color }}>{roleDisplay.text}</Text>
                 </Text>
 
                 {/* Players Grid */}
