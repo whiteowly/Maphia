@@ -11,7 +11,7 @@ const backgroundImage = require("../assets/images/lobby.png");
 
 export default function Lobby() {
     const router = useRouter();
-    const { settings, isHost, myPlayerId, setMyRole, setPhase, updateSettings } = useGame();
+    const { settings, isHost, myPlayerId, myPlayerName, setMyRole, setPhase, updateSettings } = useGame();
 
     // State from socket
     const [players, setPlayers] = useState<Player[]>([]);
@@ -174,7 +174,7 @@ export default function Lobby() {
                                         marginLeft: 10,
                                         marginTop: 5
                                     }}>
-                                        {player.name}
+                                        {player.id === myPlayerId && myPlayerName ? myPlayerName : player.name}
                                         {player.isHost ? ' 👑' : ''}
                                         {player.id === myPlayerId ? ' (You)' : ''}
                                     </Text>

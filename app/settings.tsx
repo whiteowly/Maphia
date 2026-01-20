@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useState } from 'react';
+import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
 import socketService, { SERVER_URL } from './services/socketService';
 
@@ -9,18 +9,10 @@ const backgroundImage = require("../assets/images/background.jpeg");
 
 export default function Join() {
     const router = useRouter();
-    const { updateSettings, setIsHost, setMyPlayerId, myPlayerName, setMyPlayerName } = useGame();
+    const { updateSettings, setIsHost, setMyPlayerId, setMyPlayerName } = useGame();
 
     const [roomCode, setRoomCode] = useState('');
-    const [playerName, setPlayerName] = useState(myPlayerName || '');
-
-    // Keep local input synced with context-stored name (e.g. set in Settings)
-    useEffect(() => {
-        if (myPlayerName && myPlayerName !== playerName) {
-            setPlayerName(myPlayerName);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myPlayerName]);
+    const [playerName, setPlayerName] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
 
     const handleJoin = async () => {
@@ -30,9 +22,7 @@ export default function Join() {
             return;
         }
 
-        // Use typed name if present, otherwise fall back to saved name from settings
-        const nameToUse = (playerName && playerName.trim()) ? playerName.trim() : (myPlayerName ? myPlayerName.trim() : '');
-        if (!nameToUse) {
+        if (!playerName.trim()) {
             Alert.alert('Error', 'Please enter your name');
             return;
         }
@@ -43,8 +33,8 @@ export default function Join() {
             // Connect to server
             await socketService.connect();
 
-            // Join room (use name from input or saved settings)
-            socketService.joinRoom(roomCode.toUpperCase(), nameToUse, (response) => {
+            // Join room
+            socketService.joinRoom(roomCode.toUpperCase(), playerName, (response) => {
                 setIsConnecting(false);
 
                 if (response.success) {
@@ -54,9 +44,7 @@ export default function Join() {
                     });
                     setIsHost(false);
                     setMyPlayerId(response.playerId!);
-
-                    // Persist the name we used into context so other screens can read it
-                    setMyPlayerName(nameToUse);
+                        setMyPlayerName(playerName);
 
                     // Navigate to lobby
                     router.push('/lobby');
@@ -94,17 +82,27 @@ export default function Join() {
                     maxLength={15}
                 />
 
+                <TouchableOpacity
+                    style={[styles.nameSaveButton]}
+                    onPress={() => {
+                        const name = playerName.trim();
+                        if (!name) {
+                            Alert.alert('Error', 'Please enter a name before saving');
+                            return;
+                        }
+                        setMyPlayerName(name);
+                        if (socketService.isConnected()) {
+                            socketService.changeName(name);
+                        }
+                        Alert.alert('Saved', 'Name updated');
+                    }}
+                    activeOpacity={0.8}
+                >
+                    <Text style={[styles.Text, { fontSize: 16 }]}>Save Name</Text>
+                </TouchableOpacity>
+
                 {/* Room Code Input */}
-                <Text style={[styles.Text, { fontSize: 20, marginLeft: 10, marginTop: 15 }]}>Room Code</Text>
-                <TextInput
-                    style={styles.input}
-                    value={roomCode}
-                    onChangeText={(text) => setRoomCode(text.toUpperCase())}
-                    placeholder="Enter room code..."
-                    placeholderTextColor="#999"
-                    maxLength={5}
-                    autoCapitalize="characters"
-                />
+                
 
                 {/* Server Status */}
                 <View style={styles.serverStatus}>
@@ -114,23 +112,7 @@ export default function Join() {
                 </View>
             </View>
 
-            <View style={{ alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
-                <TouchableOpacity
-                    style={[styles.shareButton, isConnecting && styles.disabledButton]}
-                    onPress={handleJoin}
-                    activeOpacity={0.8}
-                    disabled={isConnecting}
-                >
-                    {isConnecting ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator color="white" size="small" />
-                            <Text style={[styles.Text, { fontSize: 20, marginLeft: 10 }]}>Joining...</Text>
-                        </View>
-                    ) : (
-                        <Text style={[styles.Text, { fontSize: 25 }]}>Join Game</Text>
-                    )}
-                </TouchableOpacity>
-            </View>
+            
         </ImageBackground>
     );
 }
@@ -203,5 +185,13 @@ const styles = StyleSheet.create({
     serverStatus: {
         marginTop: 20,
         alignItems: 'center',
+    },
+    nameSaveButton: {
+        alignSelf: 'center',
+        marginTop: 10,
+        backgroundColor: '#610000cc',
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+        borderRadius: 8,
     },
 });

@@ -14,7 +14,7 @@ export default function Index() {
       <Link href="/create" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Host a Game</Link>
       <Link href="/join" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Join</Link>
       <Link href= "/Accounts" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Play Offline</Link>
-      <Text style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Settings</Text>
+      <Link href= "/settings" style={{fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Settings</Link>
     </ImageBackground>
 
   );

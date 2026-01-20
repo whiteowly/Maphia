@@ -37,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="revealUI" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="Accounts" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
     </GameProvider>
   );

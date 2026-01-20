@@ -42,7 +42,7 @@ export interface RoomUpdate {
 }
 
 export interface RoleAssignment {
-    role: 'maphia' | 'civilian';
+    role: 'maphia' | 'civilian' ;
     teammates: { id: string; name: string }[];
 }
 
@@ -167,6 +167,11 @@ class SocketService {
     // Set ready status
     setReady(isReady: boolean): void {
         this.socket?.emit('set_ready', { isReady });
+    }
+
+    // Change player name (local update + notify server)
+    changeName(name: string): void {
+        this.socket?.emit('change_name', { name });
     }
 
     // Start the game (host only)

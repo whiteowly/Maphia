@@ -14,14 +14,14 @@ const TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
 
 export default function Create() {
   const router = useRouter();
-  const { settings, updateSettings, setIsHost, setMyPlayerId } = useGame();
+  const { settings, updateSettings, setIsHost, setMyPlayerId, myPlayerName, setMyPlayerName } = useGame();
 
   // Local state for UI
   const [playerCount, setPlayerCount] = useState(settings.maxPlayers || 7);
   const [maphiaCount, setMaphiaCount] = useState(settings.maphiaCount || 2);
   const [discussionTime, setDiscussionTime] = useState(60);
   const [votingTime, setVotingTime] = useState(30);
-  const [playerName, setPlayerName] = useState('Host');
+  const [playerName, setPlayerName] = useState(myPlayerName || 'Host');
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Modal state for time pickers
@@ -65,6 +65,11 @@ export default function Create() {
           });
           setIsHost(true);
           setMyPlayerId(response.playerId!);
+
+          // Persist host name into context so other screens use the saved name
+          if (playerName && playerName.trim()) {
+            setMyPlayerName(playerName.trim());
+          }
 
           // Navigate to lobby
           router.push('/lobby');

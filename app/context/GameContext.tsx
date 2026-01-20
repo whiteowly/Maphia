@@ -32,6 +32,8 @@ interface GameContextType {
     // Current player info
     myPlayerId: string | null;
     setMyPlayerId: (id: string | null) => void;
+    myPlayerName: string;
+    setMyPlayerName: (name: string) => void;
 
     // Is host
     isHost: boolean;
@@ -57,6 +59,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [myRole, setMyRole] = useState<'maphia' | 'civilian' | null>(null);
     const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
+    const [myPlayerName, setMyPlayerName] = useState<string>('');
     const [isHost, setIsHost] = useState(false);
 
     const updateSettings = (updates: Partial<GameSettings>) => {
@@ -89,6 +92,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setTimeRemaining(0);
         setMyRole(null);
         setMyPlayerId(null);
+        setMyPlayerName('');
         setIsHost(false);
     };
 
@@ -122,6 +126,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setMyRole,
                 myPlayerId,
                 setMyPlayerId,
+                myPlayerName,
+                setMyPlayerName,
                 isHost,
                 setIsHost,
                 resetGame,
