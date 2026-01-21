@@ -9,10 +9,10 @@ const backgroundImage = require("../assets/images/background.jpeg");
 
 export default function Join() {
     const router = useRouter();
-    const { updateSettings, setIsHost, setMyPlayerId } = useGame();
+    const { updateSettings, setIsHost, setMyPlayerId, playerName: savedName } = useGame();
 
     const [roomCode, setRoomCode] = useState('');
-    const [playerName, setPlayerName] = useState('');
+    const [playerName, setPlayerName] = useState(savedName || '');
     const [isConnecting, setIsConnecting] = useState(false);
 
     const handleJoin = async () => {
@@ -23,7 +23,11 @@ export default function Join() {
         }
 
         if (!playerName.trim()) {
-            Alert.alert('Error', 'Please enter your name');
+            Alert.alert(
+                'Name Required',
+                'Please set your display name in Settings first.',
+                [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
+            );
             return;
         }
 

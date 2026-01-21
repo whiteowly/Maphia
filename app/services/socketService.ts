@@ -79,6 +79,22 @@ type SubmitVoteCallback = (data: { success: boolean; error?: string }) => void;
 class SocketService {
     private socket: Socket | null = null;
     private listeners: Map<string, Set<Function>> = new Map();
+    private gameOverData: any = null;
+
+    // Store game over data for retrieval
+    setGameOverData(data: any): void {
+        this.gameOverData = data;
+    }
+
+    // Get stored game over data
+    getGameOverData(): any {
+        return this.gameOverData;
+    }
+
+    // Send event to server (public method for game over screen)
+    sendEvent(event: string, data: any): void {
+        this.socket?.emit(event, data);
+    }
 
     // Connect to the server
     connect(): Promise<void> {
@@ -146,6 +162,9 @@ class SocketService {
             'vote_submitted',
             'voting_results',
             'game_over',
+            'return_to_lobby',
+            'host_left',
+            'waiting_for_host',
         ];
 
         events.forEach((event) => {

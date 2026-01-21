@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
+import { useMusic } from './context/MusicContext';
 import socketService, { Player, RoleAssignment, RoomUpdate } from './services/socketService';
 import { formatTimeDisplay } from './types/game';
 
@@ -12,6 +13,7 @@ const backgroundImage = require("../assets/images/lobby.png");
 export default function Lobby() {
     const router = useRouter();
     const { settings, isHost, myPlayerId, setMyRole, setPhase, updateSettings, setMaphiaTeammates } = useGame();
+    const { stopMusic } = useMusic();
 
     // State from socket
     const [players, setPlayers] = useState<Player[]>([]);
@@ -54,6 +56,9 @@ export default function Lobby() {
         const unsubRoleAssigned = socketService.on('role_assigned', (data: RoleAssignment) => {
             setMyRole(data.role);
             setPhase('role_reveal');
+
+            // Stop background music when game starts
+            stopMusic();
 
             // Store teammates for mafia players (used to filter night targets)
             if (data.role === 'maphia' && data.teammates) {
@@ -138,6 +143,7 @@ export default function Lobby() {
                     text: 'Leave',
                     style: 'destructive',
                     onPress: () => {
+                        console.log('Leaving lobby...');
                         socketService.disconnect();
                         router.replace('/');
                     }

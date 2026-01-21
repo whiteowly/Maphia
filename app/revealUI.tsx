@@ -39,7 +39,9 @@ export default function VotingResults() {
         const unsubGameOver = socketService.on('game_over', (data: any) => {
             console.log('[VotingResults] Game over:', data);
             setPhase('game_over');
-            // Stay on this screen but update display
+            // Store game over data for the gameOver screen
+            socketService.setGameOverData(data);
+            router.replace('/gameOver' as any);
         });
 
         // Countdown timer for display

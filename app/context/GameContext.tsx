@@ -41,6 +41,10 @@ interface GameContextType {
     maphiaTeammates: { id: string; name: string }[];
     setMaphiaTeammates: (teammates: { id: string; name: string }[]) => void;
 
+    // Player name (saved for reuse)
+    playerName: string;
+    setPlayerName: (name: string) => void;
+
     // Reset game
     resetGame: () => void;
 
@@ -63,6 +67,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
     const [isHost, setIsHost] = useState(false);
     const [maphiaTeammates, setMaphiaTeammates] = useState<{ id: string; name: string }[]>([]);
+    const [playerName, setPlayerName] = useState<string>('');
 
     const updateSettings = (updates: Partial<GameSettings>) => {
         setSettings(prev => ({ ...prev, ...updates }));
@@ -96,6 +101,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setMyPlayerId(null);
         setIsHost(false);
         setMaphiaTeammates([]);
+        // Don't reset playerName - it should persist
     };
 
     const initializeGame = (newSettings: Partial<GameSettings>) => {
@@ -132,6 +138,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setIsHost,
                 maphiaTeammates,
                 setMaphiaTeammates,
+                playerName,
+                setPlayerName,
                 resetGame,
                 initializeGame,
             }}

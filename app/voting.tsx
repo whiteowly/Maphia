@@ -82,13 +82,9 @@ export default function Voting() {
         // Listen for game over
         const unsubGameOver = socketService.on('game_over', (data: any) => {
             setPhase('game_over');
-            router.replace({
-                pathname: '/revealUI',
-                params: {
-                    gameOver: 'true',
-                    winner: data.winner,
-                },
-            });
+            // Store game over data for the gameOver screen
+            socketService.setGameOverData(data);
+            router.replace('/gameOver' as any);
         });
 
         // Cleanup
@@ -282,7 +278,18 @@ export default function Voting() {
                     {totalVotes}/{totalVoters} voted
                 </Text>
 
-                {!hasVoted ? (
+
+                {/* Check if current player is dead */}
+                {players.find(p => p.id === myPlayerId)?.isDead ? (
+                    <View style={styles.spectatorContainer}>
+                        <Text style={[styles.Text, { fontSize: 20, color: '#888', textAlign: 'center' }]}>
+                            👻 You are spectating
+                        </Text>
+                        <Text style={[styles.Text, { fontSize: 14, color: '#666', textAlign: 'center', marginTop: 5 }]}>
+                            Dead players cannot vote
+                        </Text>
+                    </View>
+                ) : !hasVoted ? (
                     <View style={styles.buttonRow}>
                         <TouchableOpacity
                             style={styles.skipButton}
@@ -364,6 +371,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-end',
+    },
+    spectatorContainer: {
+        marginTop: 10,
+        padding: 15,
+        alignItems: 'center',
     },
     waitingContainer: {
         marginTop: 10,

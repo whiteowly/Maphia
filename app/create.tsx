@@ -14,14 +14,13 @@ const TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
 
 export default function Create() {
   const router = useRouter();
-  const { settings, updateSettings, setIsHost, setMyPlayerId } = useGame();
+  const { settings, updateSettings, setIsHost, setMyPlayerId, playerName } = useGame();
 
   // Local state for UI
   const [playerCount, setPlayerCount] = useState(settings.maxPlayers || 7);
   const [maphiaCount, setMaphiaCount] = useState(settings.maphiaCount || 2);
   const [discussionTime, setDiscussionTime] = useState(60);
   const [votingTime, setVotingTime] = useState(30);
-  const [playerName, setPlayerName] = useState('Host');
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Modal state for time pickers
@@ -40,6 +39,16 @@ export default function Create() {
   }, [playerCount, maphiaCount]);
 
   const handleCreateGame = async () => {
+    // Check if player has set a name
+    if (!playerName || playerName.trim().length === 0) {
+      Alert.alert(
+        'Name Required',
+        'Please set your display name in Settings first.',
+        [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
+      );
+      return;
+    }
+
     setIsConnecting(true);
 
     try {

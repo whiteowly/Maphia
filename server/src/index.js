@@ -264,6 +264,30 @@ class GameRoom {
     clearVotes() {
         this.votes.clear();
     }
+
+    // Reset game state for play again
+    resetGame() {
+        this.phase = 'lobby';
+        this.currentRound = 0;
+        this.timeRemaining = 0;
+        this.votes.clear();
+        this.nightVotes.clear();
+        this.guardianSave = null;
+
+        // Clear timer if running
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        // Reset player state but keep them in the room
+        for (const player of this.players.values()) {
+            player.isDead = false;
+            player.role = null;
+            player.isReady = player.id === this.hostId; // Host stays ready
+            player.isMuted = false;
+        }
+    }
 }
 
 // Generate unique room code
@@ -793,6 +817,12 @@ io.on('connection', (socket) => {
             timeRemaining: room.timeRemaining,
         });
 
+        // Send room update so discussion screen has updated player list (including deaths)
+        io.to(room.roomCode).emit('room_update', {
+            state: room.getState(),
+            players: room.getPublicPlayerList(),
+        });
+
         // Start timer
         if (room.timerInterval) {
             clearInterval(room.timerInterval);
@@ -913,7 +943,76 @@ io.on('connection', (socket) => {
             }, 5000);
         }
     }
-});
+
+    // Play again - host only
+    socket.on('play_again', () => {
+        const room = rooms.get(currentRoom);
+        if (!room) return;
+
+        // Only host can trigger play again
+        if (room.hostId !== playerId) {
+            socket.emit('waiting_for_host');
+            return;
+        }
+
+        // Reset game state
+        room.resetGame();
+
+        // Notify all players to return to lobby
+        io.to(room.roomCode).emit('return_to_lobby');
+
+        // Send updated room state
+        io.to(room.roomCode).emit('room_update', {
+            roomCode: room.roomCode,
+            players: Array.from(room.players.values()).map(p => ({
+                id: p.id,
+                name: p.name,
+                isHost: p.id === room.hostId,
+            })),
+            settings: room.settings,
+            phase: room.phase,
+        });
+    });
+
+    // Non-host requesting to play again
+    socket.on('request_play_again', () => {
+        socket.emit('waiting_for_host');
+    });
+
+    // Handle disconnect - check if host left
+    socket.on('disconnect', () => {
+        console.log('Player disconnected:', playerId);
+
+        const room = rooms.get(currentRoom);
+        if (!room) return;
+
+        const wasHost = room.hostId === playerId;
+
+        // Remove player from room
+        room.removePlayer(playerId);
+
+        if (wasHost) {
+            // Host left - notify all players and close room
+            io.to(room.roomCode).emit('host_left');
+            rooms.delete(currentRoom);
+        } else if (room.players.size === 0) {
+            // No players left - delete room
+            rooms.delete(currentRoom);
+        } else {
+            // Notify remaining players
+            io.to(room.roomCode).emit('room_update', {
+                roomCode: room.roomCode,
+                players: Array.from(room.players.values()).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    isHost: p.id === room.hostId,
+                })),
+                settings: room.settings,
+                phase: room.phase,
+            });
+        }
+    });
+}); // End of io.on('connection')
 
 // Health check endpoint
 app.get('/', (req, res) => {

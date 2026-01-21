@@ -7,12 +7,22 @@
       "android": {
         "buildType": "apk"
       },
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SERVER_URL": "https://maphia-5u6b.onrender.com"
+      }
     },
-    "production": {},
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_SERVER_URL": "https://maphia-5u6b.onrender.com"
+      }
+    },
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SERVER_URL": "http://localhost:3001"
+      }
     }
   }
 }
