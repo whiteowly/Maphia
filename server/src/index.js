@@ -504,22 +504,17 @@ io.on('connection', (socket) => {
         room.nightVotes.set(playerId, targetId);
         callback({ success: true });
 
-        // Check if all Maphias voted
-        const aliveMaphias = Array.from(room.players.values())
-            .filter(p => p.role === 'maphia' && !p.isDead);
-
-        if (room.nightVotes.size >= aliveMaphias.length) {
-            clearInterval(room.timerInterval);
-            startGuardianPhase(room); // Go to guardian phase
-        }
+        // Bug 4 Fix: Check if night is complete (both Maphia and Guardian voted)
+        checkNightComplete(room);
     });
 
-    // Submit guardian save (Guardian only)
+    // Submit guardian save (Guardian only) - Bug 4 Fix: Now accepts during 'night' phase (simultaneous)
     socket.on('submit_guardian_save', (data, callback) => {
         const { targetId } = data;
         const room = rooms.get(currentRoom);
 
-        if (!room || room.phase !== 'guardian') {
+        // Bug 4 Fix: Guardian can now vote during 'night' phase (simultaneous with Maphia)
+        if (!room || (room.phase !== 'guardian' && room.phase !== 'night')) {
             callback({ success: false, error: 'Invalid phase' });
             return;
         }
@@ -538,14 +533,10 @@ io.on('connection', (socket) => {
 
         room.guardianSave = targetId;
         callback({ success: true });
+        console.log(`[DEBUG] Guardian submitted save for room ${room.roomCode}`);
 
-        // Immediately resolve night - clear timer first
-        console.log(`[DEBUG] Guardian submitted save for room ${room.roomCode}, clearing timer and resolving night`);
-        if (room.timerInterval) {
-            clearInterval(room.timerInterval);
-            room.timerInterval = null;
-        }
-        resolveNightPhase(room);
+        // Bug 4 Fix: Check if night is complete (both Maphia and Guardian voted)
+        checkNightComplete(room);
     });
 
     // Toggle mute
@@ -600,12 +591,12 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Helper function to start night phase
+    // Helper function to start night phase - Bug 4 Fix: Both Maphia and Guardian vote simultaneously
     function startNightPhase(room) {
         room.phase = 'night';
         room.nightVotes.clear();
         room.guardianSave = null;
-        room.timeRemaining = 20; // 20 seconds for night
+        room.timeRemaining = 25; // Bug 4 Fix: Extended to 25 seconds for simultaneous voting
 
         io.to(room.roomCode).emit('phase_changed', {
             phase: 'night',
@@ -631,9 +622,37 @@ io.on('connection', (socket) => {
 
             if (room.timeRemaining <= 0) {
                 clearInterval(room.timerInterval);
-                startGuardianPhase(room);
+                room.timerInterval = null;
+                // Bug 4 Fix: Resolve directly - no separate guardian phase
+                resolveNightPhase(room);
             }
         }, 1000);
+    }
+
+    // Bug 4 Fix: Helper function to check if night is complete (all required votes submitted)
+    function checkNightComplete(room) {
+        if (room.phase !== 'night') return;
+
+        // Check if all alive Maphias have voted
+        const aliveMaphias = Array.from(room.players.values())
+            .filter(p => p.role === 'maphia' && !p.isDead);
+        const allMaphiasVoted = room.nightVotes.size >= aliveMaphias.length;
+
+        // Check if Guardian has voted (or is dead/doesn't exist)
+        const guardian = Array.from(room.players.values()).find(p => p.role === 'guardian');
+        const guardianVoted = !guardian || guardian.isDead || room.guardianSave !== null;
+
+        console.log(`[DEBUG] checkNightComplete: maphias=${allMaphiasVoted}, guardian=${guardianVoted}`);
+
+        // If both have submitted, resolve night early
+        if (allMaphiasVoted && guardianVoted) {
+            console.log(`[DEBUG] All night actions complete, resolving early`);
+            if (room.timerInterval) {
+                clearInterval(room.timerInterval);
+                room.timerInterval = null;
+            }
+            resolveNightPhase(room);
+        }
     }
 
     // Helper function to start guardian phase (or skip if guardian is dead)
@@ -690,8 +709,8 @@ io.on('connection', (socket) => {
 
     // Resolve night: Determine who dies (Maphia kill vs Guardian/Joker saves)
     function resolveNightPhase(room) {
-        // Guard: Only run if in guardian phase
-        if (room.phase !== 'guardian') {
+        // Bug 4 Fix: Guard updated - now resolves from 'night' phase (not 'guardian')
+        if (room.phase !== 'night' && room.phase !== 'guardian') {
             console.log(`[DEBUG] Skipping resolveNightPhase - already in phase ${room.phase}`);
             return;
         }

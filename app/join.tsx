@@ -15,6 +15,32 @@ export default function Join() {
     const [playerName, setPlayerName] = useState(savedName || '');
     const [isConnecting, setIsConnecting] = useState(false);
 
+    // Bug 2 Fix: Map server errors to user-friendly messages
+    const getErrorMessage = (error: string): { title: string; message: string } => {
+        switch (error) {
+            case 'Room not found':
+                return {
+                    title: 'Room Not Found',
+                    message: 'Check if the code is correct and try again. The room may have been closed or the code might be wrong.'
+                };
+            case 'Room is full':
+                return {
+                    title: 'Lobby Full',
+                    message: 'This lobby has reached its maximum player limit. Ask the host to increase the player count or try joining a different game.'
+                };
+            case 'Game already in progress':
+                return {
+                    title: 'Game Already Started',
+                    message: 'This game has already begun. You cannot join a game that is in progress.'
+                };
+            default:
+                return {
+                    title: 'Unable to Join',
+                    message: error || 'Failed to join room. Please check the code and try again.'
+                };
+        }
+    };
+
     const handleJoin = async () => {
         // Validate inputs
         if (!roomCode.trim()) {
@@ -52,12 +78,14 @@ export default function Join() {
                     // Navigate to lobby
                     router.push('/lobby');
                 } else {
-                    Alert.alert('Error', response.error || 'Failed to join room');
+                    // Bug 2 Fix: Show user-friendly error messages
+                    const errorInfo = getErrorMessage(response.error || '');
+                    Alert.alert(errorInfo.title, errorInfo.message);
                 }
             });
         } catch (error) {
             setIsConnecting(false);
-            Alert.alert('Connection Error', 'Failed to connect to server. Make sure the server is running.');
+            Alert.alert('Connection Error', 'Failed to connect to server. Make sure the server is running and try again.');
             console.error('Connection error:', error);
         }
     };

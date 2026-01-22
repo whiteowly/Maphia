@@ -17,9 +17,8 @@ const Night = () => {
         // Listen for phase changes
         const unsubPhase = socketService.on('phase_changed', (data: { phase: string }) => {
             setPhase(data.phase as any);
-            if (data.phase === 'guardian') {
-                router.replace('/guardian');
-            } else if (data.phase === 'discussion') {
+            // Bug 4 Fix: Removed guardian phase navigation - guardian now votes during night
+            if (data.phase === 'discussion') {
                 router.replace('/game');
             }
         });
@@ -51,19 +50,32 @@ const Night = () => {
         };
     }, []);
 
+    // Bug 4 Fix: Handle vote for Maphia OR save for Guardian
     const handleVote = () => {
         if (!selectedTarget) {
-            Alert.alert('Select a target', 'Please select someone to eliminate');
+            Alert.alert('Select a target', myRole === 'guardian' ? 'Please select someone to protect' : 'Please select someone to eliminate');
             return;
         }
 
-        socketService.submitNightVote(selectedTarget, (response) => {
-            if (response.success) {
-                setHasVoted(true);
-            } else {
-                Alert.alert('Error', response.error || 'Failed to submit vote');
-            }
-        });
+        if (myRole === 'guardian') {
+            // Guardian save action
+            socketService.submitGuardianSave(selectedTarget, (response) => {
+                if (response.success) {
+                    setHasVoted(true);
+                } else {
+                    Alert.alert('Error', response.error || 'Failed to save');
+                }
+            });
+        } else {
+            // Maphia kill action
+            socketService.submitNightVote(selectedTarget, (response) => {
+                if (response.success) {
+                    setHasVoted(true);
+                } else {
+                    Alert.alert('Error', response.error || 'Failed to submit vote');
+                }
+            });
+        }
     };
 
     const handleQuit = () => {
@@ -71,15 +83,20 @@ const Night = () => {
         router.replace('/');
     };
 
-    // Filter out dead players, self, and mafia teammates (mafia can't kill themselves or teammates)
+    // Filter players - Maphia can't kill themselves or teammates, Guardian can't save themselves
     const teammateIds = maphiaTeammates.map(t => t.id);
+    const isMaphia = myRole === 'maphia';
+    const isGuardian = myRole === 'guardian';
+
     const alivePlayers = players.filter(p =>
         !p.isDead &&
         p.id !== undefined &&
-        p.id !== myPlayerId &&  // Can't kill yourself
-        !teammateIds.includes(p.id)  // Can't kill teammates
+        p.id !== myPlayerId && // Can't target yourself
+        (isMaphia ? !teammateIds.includes(p.id) : true) // Maphia can't kill teammates
     );
-    const isMaphia = myRole === 'maphia';
+
+    // Bug 4 Fix: Show appropriate UI based on role
+    const canAct = isMaphia || isGuardian;
 
     return (
         <ImageBackground source={backgroundImage} style={styles.background}>
@@ -91,20 +108,29 @@ const Night = () => {
             </Pressable>
 
             <View style={styles.container}>
-                <Text style={styles.title}>🌙 Night Phase</Text>
+                <Text style={[styles.title, isGuardian && { color: '#3B82F6' }]}>
+                    {isGuardian ? '👼 Guardian Angel' : '🌙 Night Phase'}
+                </Text>
                 <Text style={styles.timer}>Time: {timeRemaining}s</Text>
 
-                {isMaphia ? (
+                {canAct ? (
                     <>
                         <Text style={styles.instruction}>
-                            Select a player to eliminate
+                            {isGuardian ? 'Choose someone to save (not yourself!)' : 'Select a player to eliminate'}
                         </Text>
+                        {isGuardian && (
+                            <Text style={styles.warningText}>
+                                ⚠️ Warning: Saving a Maphia will kill you!
+                            </Text>
+                        )}
 
                         {hasVoted ? (
                             <View style={styles.votedContainer}>
-                                <MaterialIcons name="check-circle" size={60} color="#7BFF7B" />
-                                <Text style={styles.votedText}>Vote submitted!</Text>
-                                <Text style={styles.waitText}>Waiting for other Maphias...</Text>
+                                <MaterialIcons name="check-circle" size={60} color={isGuardian ? '#3B82F6' : '#7BFF7B'} />
+                                <Text style={[styles.votedText, isGuardian && { color: '#3B82F6' }]}>
+                                    {isGuardian ? 'Protection submitted!' : 'Vote submitted!'}
+                                </Text>
+                                <Text style={styles.waitText}>Waiting for night to end...</Text>
                             </View>
                         ) : (
                             <>
@@ -115,13 +141,13 @@ const Night = () => {
                                         <TouchableOpacity
                                             style={[
                                                 styles.playerCard,
-                                                selectedTarget === item.id && styles.selectedCard
+                                                selectedTarget === item.id && (isGuardian ? styles.guardianSelectedCard : styles.selectedCard)
                                             ]}
                                             onPress={() => setSelectedTarget(item.id)}
                                         >
                                             <Text style={styles.playerName}>{item.name}</Text>
                                             {selectedTarget === item.id && (
-                                                <MaterialIcons name="check" size={24} color="#7BFF7B" />
+                                                <MaterialIcons name="check" size={24} color={isGuardian ? '#3B82F6' : '#7BFF7B'} />
                                             )}
                                         </TouchableOpacity>
                                     )}
@@ -129,18 +155,23 @@ const Night = () => {
                                 />
 
                                 <TouchableOpacity
-                                    style={[styles.voteButton, !selectedTarget && styles.disabledButton]}
+                                    style={[
+                                        isGuardian ? styles.guardianButton : styles.voteButton,
+                                        !selectedTarget && styles.disabledButton
+                                    ]}
                                     onPress={handleVote}
                                     disabled={!selectedTarget}
                                 >
-                                    <Text style={styles.voteText}>Confirm Kill</Text>
+                                    <Text style={styles.voteText}>
+                                        {isGuardian ? 'Protect' : 'Confirm Kill'}
+                                    </Text>
                                 </TouchableOpacity>
                             </>
                         )}
                     </>
                 ) : (
                     <View style={styles.waitingContainer}>
-                        <Text style={styles.waitingText}>😴 The Maphia are plotting...</Text>
+                        <Text style={styles.waitingText}>😴 The night is dark...</Text>
                         <Text style={styles.waitingSubtext}>Stay quiet and hope you're not targeted!</Text>
                     </View>
                 )}
@@ -273,5 +304,28 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: 'white',
         marginLeft: 10,
+    },
+    // Bug 4 Fix: Guardian-specific styles
+    warningText: {
+        fontFamily: 'Gruesome',
+        fontSize: 16,
+        color: '#FCA5A5',
+        marginBottom: 20,
+        textAlign: 'center' as const,
+    },
+    guardianSelectedCard: {
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    },
+    guardianButton: {
+        backgroundColor: '#1E40AF',
+        paddingHorizontal: 50,
+        paddingVertical: 15,
+        borderRadius: 50,
+        marginTop: 30,
+        shadowColor: '#3B82F6',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 10,
     },
 });
