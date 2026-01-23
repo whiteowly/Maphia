@@ -6,7 +6,7 @@ import { useGame } from './context/GameContext';
 import socketService, { Player, VotingResults } from './services/socketService';
 import { formatCountdown } from './types/game';
 
-const backgroundImage = require("../assets/images/lobby.png");
+const backgroundImage = require("../assets/images/day_background.png");
 
 export default function Voting() {
     const router = useRouter();
@@ -105,7 +105,7 @@ export default function Voting() {
 
     const handleSelectPlayer = (playerId: string) => {
         if (hasVoted) return;
-        if (playerId === myPlayerId) return; // Can't vote for yourself
+        // if (playerId === myPlayerId) return; // Can't vote for yourself (Removed to allow self-voting)
         setSelectedPlayer(playerId === selectedPlayer ? null : playerId);
     };
 
@@ -235,7 +235,7 @@ export default function Voting() {
                                                     isMe && styles.myCard,
                                                 ]}
                                                 onPress={() => handleSelectPlayer(p.id)}
-                                                disabled={hasVoted || isMe || isDead}
+                                                disabled={hasVoted || isDead}
                                                 activeOpacity={0.7}
                                             >
                                                 <View style={styles.playerCardContent}>

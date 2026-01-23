@@ -1,11 +1,27 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, ImageBackground, Modal, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, ImageBackground, Modal, Platform, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
 import socketService, { SERVER_URL } from './services/socketService';
 import SliderComponent from './sliderComponent';
 import SliderMafia from "./sliderMafia";
+
+// Web-compatible alert helper
+const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
+  if (Platform.OS === 'web') {
+    if (buttons && buttons.length > 0) {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+      if (confirmed && buttons[0]?.onPress) {
+        buttons[0].onPress();
+      }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+    }
+  } else {
+    Alert.alert(title, message, buttons);
+  }
+};
 
 const backgroundImage = require("../assets/images/background.jpeg");
 
@@ -41,7 +57,7 @@ export default function Create() {
   const handleCreateGame = async () => {
     // Check if player has set a name
     if (!playerName || playerName.trim().length === 0) {
-      Alert.alert(
+      showAlert(
         'Name Required',
         'Please set your display name in Settings first.',
         [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
@@ -78,13 +94,13 @@ export default function Create() {
           // Navigate to lobby
           router.push('/lobby');
         } else {
-          Alert.alert('Error', response.error || 'Failed to create room');
+          showAlert('Error', response.error || 'Failed to create room');
         }
       });
     } catch (error) {
       setIsConnecting(false);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      Alert.alert('Connection Error', `Failed to connect to server: ${errorMessage}. Make sure the server is running and accessible.`);
+      showAlert('Connection Error', `Failed to connect to server: ${errorMessage}. Make sure the server is running and accessible.`);
       console.error('Connection error:', error);
     }
   };

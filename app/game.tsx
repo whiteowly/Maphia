@@ -1,13 +1,12 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useGame } from './context/GameContext';
 import socketService, { Player } from './services/socketService';
 import { formatCountdown } from './types/game';
 
-const backgroundImage = require("../assets/images/lobby.png");
+const backgroundImage = require("../assets/images/day_background.png");
 
 export default function Game() {
     const router = useRouter();

@@ -65,8 +65,8 @@ const NightResultsScreen = () => {
         if (results.saved) {
             return {
                 icon: '✨',
-                title: `${results.targetedName} was saved!`,
-                subtitle: 'The Maphia targeted them, but they survived!',
+                title: `The Guardian Angel saved someone!`,
+                subtitle: 'The Maphia\'s attack was blocked!',
                 color: '#3B82F6'
             };
         }
@@ -118,12 +118,7 @@ const NightResultsScreen = () => {
                         </Text>
                     )}
 
-                    {/* Bug 3: Show who the guardian tried to save */}
-                    {results?.guardianSavedName && (
-                        <Text style={styles.guardianInfo}>
-                            👼 Guardian tried to save: {results.guardianSavedName}
-                        </Text>
-                    )}
+
                 </View>
 
                 <Text style={styles.countdown}>Starting discussion phase...</Text>

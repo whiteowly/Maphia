@@ -1,9 +1,25 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ImageBackground, Platform, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
 import socketService, { SERVER_URL } from './services/socketService';
+
+// Web-compatible alert helper
+const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
+    if (Platform.OS === 'web') {
+        if (buttons && buttons.length > 0) {
+            const confirmed = window.confirm(`${title}\n\n${message}`);
+            if (confirmed && buttons[0]?.onPress) {
+                buttons[0].onPress();
+            }
+        } else {
+            window.alert(`${title}\n\n${message}`);
+        }
+    } else {
+        Alert.alert(title, message, buttons);
+    }
+};
 
 const backgroundImage = require("../assets/images/background.jpeg");
 
@@ -44,12 +60,12 @@ export default function Join() {
     const handleJoin = async () => {
         // Validate inputs
         if (!roomCode.trim()) {
-            Alert.alert('Error', 'Please enter a room code');
+            showAlert('Error', 'Please enter a room code');
             return;
         }
 
         if (!playerName.trim()) {
-            Alert.alert(
+            showAlert(
                 'Name Required',
                 'Please set your display name in Settings first.',
                 [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
@@ -80,12 +96,12 @@ export default function Join() {
                 } else {
                     // Bug 2 Fix: Show user-friendly error messages
                     const errorInfo = getErrorMessage(response.error || '');
-                    Alert.alert(errorInfo.title, errorInfo.message);
+                    showAlert(errorInfo.title, errorInfo.message);
                 }
             });
         } catch (error) {
             setIsConnecting(false);
-            Alert.alert('Connection Error', 'Failed to connect to server. Make sure the server is running and try again.');
+            showAlert('Connection Error', 'Failed to connect to server. Make sure the server is running and try again.');
             console.error('Connection error:', error);
         }
     };

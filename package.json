@@ -6,7 +6,7 @@
     "start": "expo start",
     "dev": "expo start --clear",
     "web": "expo start --web",
-    "web:prod": "set EXPO_PUBLIC_SERVER_URL=https://maphia-5u6b.onrender.com && expo start --web",
+    "web:prod": "set EXPO_PUBLIC_SERVER_URL=https://maphia-5u6b.onrender.com&& expo start --web",
     "build:dev": "eas build --profile development",
     "build:prod": "eas build --profile production",
     "build:apk": "eas build --profile preview",
