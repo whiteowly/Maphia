@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 // Server URL from environment variable (set in .env)
 // For web testing: http://localhost:3001
 // For mobile/APK: https://maphia-5u6b.onrender.com
-export const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || 'http://localhost:3001';
+export const SERVER_URL = 'http://192.168.1.6:3001';
 
 // Event types
 export type GamePhase = 'lobby' | 'role_reveal' | 'night' | 'guardian' | 'discussion' | 'voting' | 'results' | 'game_over';
