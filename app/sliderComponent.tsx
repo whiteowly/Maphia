@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 5,
     textAlign: 'left',
-    color: 'white',
+    color: '#cabdb7',
     fontFamily: 'Gruesome',
   },
   slider: {

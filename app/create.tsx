@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, ImageBackground, Modal, Platform, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
-import socketService, { SERVER_URL } from './services/socketService';
+import socketService from './services/socketService';
 import SliderComponent from './sliderComponent';
 import SliderMafia from "./sliderMafia";
 
@@ -23,10 +23,12 @@ const showAlert = (title: string, message: string, buttons?: { text: string; onP
   }
 };
 
-const backgroundImage = require("../assets/images/background.jpeg");
+const backgroundImage = require("../assets/images/background.png");
 
 // Time options in seconds (15s to 120s)
-const TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
+// Time options in seconds
+const DISCUSSION_TIME_OPTIONS = [45, 60, 90, 120];
+const VOTING_TIME_OPTIONS = [30, 45, 60, 90];
 
 export default function Create() {
   const router = useRouter();
@@ -121,13 +123,15 @@ export default function Create() {
     onClose,
     currentValue,
     onSelect,
-    title
+    title,
+    options
   }: {
     visible: boolean;
     onClose: () => void;
     currentValue: number;
     onSelect: (value: number) => void;
     title: string;
+    options: number[];
   }) => (
     <Modal
       visible={visible}
@@ -139,7 +143,7 @@ export default function Create() {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{title}</Text>
           <FlatList
-            data={TIME_OPTIONS}
+            data={options}
             keyExtractor={(item) => item.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -178,7 +182,7 @@ export default function Create() {
       <View style={styles.container}>
         {/* Game Rules Card */}
         <View style={styles.cardContainer}>
-          <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 4, alignSelf: 'flex-start' }}>Game rules</Text>
+          <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: '#cabdb7', marginTop: 0, alignSelf: 'flex-start' }}>Game rules</Text>
 
           <View style={styles.contentRow}>
             <SliderComponent
@@ -217,21 +221,17 @@ export default function Create() {
           </View>
 
           {/* Server Status */}
-          <View style={styles.serverStatus}>
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 12, color: '#888' }}>
-              Server: {SERVER_URL.replace('http://', '')}
-            </Text>
-          </View>
+
         </View>
 
         {/* Roles Card - Dynamic! */}
         <View style={styles.cardContainer1}>
-          <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 5, alignSelf: 'flex-start' }}>Roles</Text>
+          <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: '#cabdb7', marginTop: 5, alignSelf: 'flex-start' }}>Roles</Text>
           <View style={styles.contentColumn}>
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10, marginTop: 20 }}>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10, marginTop: 20 }}>
               {playerCount} Players
             </Text>
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#FF6B6B', marginLeft: 10, marginTop: 20 }}>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#860505ff', marginLeft: 10, marginTop: 20 }}>
               {maphiaCount} Maphia{maphiaCount > 1 ? 's' : ''}
             </Text>
             <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#7BFF7B', marginLeft: 10, marginTop: 20 }}>
@@ -240,14 +240,14 @@ export default function Create() {
           </View>
 
           {/* Game Settings Summary */}
-          <View style={styles.settingsSummary}>
+          {/* <View style={styles.settingsSummary}>
             <Text style={{ fontFamily: 'Gruesome', fontSize: 14, color: '#AAAAAA', marginTop: 10 }}>
               Discussion: {formatTime(discussionTime)}
             </Text>
             <Text style={{ fontFamily: 'Gruesome', fontSize: 14, color: '#AAAAAA', marginTop: 5 }}>
               Voting: {formatTime(votingTime)}
             </Text>
-          </View>
+          </View> */}
         </View>
       </View>
 
@@ -261,10 +261,10 @@ export default function Create() {
           {isConnecting ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator color="white" size="small" />
-              <Text style={{ fontFamily: 'Gruesome', fontSize: 24, color: 'white', marginLeft: 10 }}>Connecting...</Text>
+              <Text style={{ fontFamily: 'Gruesome', fontSize: 24, color: '#cabdb7', marginLeft: 10 }}>Connecting...</Text>
             </View>
           ) : (
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white' }}>Create Game</Text>
+            <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: '#cabdb7' }}>Create Game</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -276,6 +276,7 @@ export default function Create() {
         currentValue={discussionTime}
         onSelect={setDiscussionTime}
         title="Discussion Time"
+        options={DISCUSSION_TIME_OPTIONS}
       />
       <TimePickerModal
         visible={showVotingPicker}
@@ -283,6 +284,7 @@ export default function Create() {
         currentValue={votingTime}
         onSelect={setVotingTime}
         title="Voting Time"
+        options={VOTING_TIME_OPTIONS}
       />
     </ImageBackground>
   );
@@ -306,20 +308,21 @@ const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: 'column',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     margin: 10,
-    marginLeft: 70,
+    marginLeft: 50,
     marginRight: 10,
     flex: 0.7,
     backgroundColor: '#22010180',
     shadowColor: '#250101ff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 2,
+    elevation: 0,
+    marginTop: 10
   },
   shareButton: {
-    width: '10%',
+    width: '30%',
     height: '40%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -343,7 +346,7 @@ const styles = StyleSheet.create({
   cardContainer1: {
     flexDirection: 'column',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     margin: 10,
     marginLeft: 10,
     marginRight: 20,
@@ -353,7 +356,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
   },
   contentRow: {
     flexDirection: 'row',
@@ -381,7 +384,7 @@ const styles = StyleSheet.create({
   timeSettingsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 10,
     paddingHorizontal: 10,
   },
   timeSetting: {
@@ -391,7 +394,7 @@ const styles = StyleSheet.create({
   timeLabel: {
     fontFamily: 'Gruesome',
     fontSize: 16,
-    color: 'white',
+    color: '#cabdb7',
     marginBottom: 8,
   },
   timeSelector: {
@@ -412,7 +415,7 @@ const styles = StyleSheet.create({
   timeSelectorText: {
     fontFamily: 'Gruesome',
     fontSize: 18,
-    color: '#FF4444',
+    color: '#cabdb7',
   },
   serverStatus: {
     marginTop: 15,
@@ -440,7 +443,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: 'Gruesome',
     fontSize: 22,
-    color: 'white',
+    color: '#cabdb7',
     textAlign: 'center',
     marginBottom: 15,
   },

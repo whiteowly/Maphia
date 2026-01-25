@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   link: {
     fontFamily: 'Gruesome',
     fontSize: 35,
-    color: 'white',
+    color: '#cabdb7',
     marginVertical: 10,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: -1, height: 1 },
