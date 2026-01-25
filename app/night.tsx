@@ -338,8 +338,9 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 3,
         margin: 0,
-        marginLeft: 150,
-        marginRight: 150,
+        width: '90%',
+        maxWidth: 1000,
+        alignSelf: 'center',
         backgroundColor: 'transparent',
     },
     skipButton: {

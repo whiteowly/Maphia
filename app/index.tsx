@@ -1,10 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { ImageBackground, StatusBar, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { ImageBackground, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useMusic } from "./context/MusicContext";
 
-const backgroundImage = require("../assets/images/background.jpeg");
+const backgroundImage = require("../assets/images/background.png");
 
 export default function Index() {
   const { startMusic, isPlaying } = useMusic();
@@ -39,10 +39,12 @@ export default function Index() {
         </TouchableOpacity>
       )}
 
-      <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 50 }}>Maphia</Text>
-      <Link href="/create" style={{ fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Host a Game</Link>
-      <Link href="/join" style={{ fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Join</Link>
-      <Link href="/settings" style={{ fontFamily: 'Gruesome', fontSize: 27, color: 'white', }}>Settings</Link>
+      <View style={styles.container}>
+
+        <Link href="/create" style={styles.link}>Host a Game</Link>
+        <Link href="/join" style={styles.link}>Join</Link>
+        <Link href="/settings" style={styles.link}>Settings</Link>
+      </View>
     </ImageBackground>
 
   );
@@ -54,10 +56,32 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  Text: {
-    color: "white",
-    fontSize: 30,
-    fontWeight: "bold",
-
+  container: {
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    padding: 20,
+    marginTop: 100,
+    marginLeft: 140
   },
+  title: {
+    fontFamily: 'Gruesome',
+    fontSize: 60,
+    color: 'white',
+    marginBottom: 50,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10
+  },
+  link: {
+    fontFamily: 'Gruesome',
+    fontSize: 35,
+    color: 'white',
+    marginVertical: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    marginTop: 0
+  }
 });

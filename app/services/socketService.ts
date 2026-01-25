@@ -227,7 +227,7 @@ class SocketService {
     }
 
     // Submit a night vote (Maphia only)
-    submitNightVote(targetId: string, callback: SubmitVoteCallback): void {
+    submitNightVote(targetId: string | null, callback: SubmitVoteCallback): void {
         if (!this.socket) {
             callback({ success: false, error: 'Not connected' });
             return;
@@ -237,7 +237,7 @@ class SocketService {
     }
 
     // Submit guardian save (Guardian only)
-    submitGuardianSave(targetId: string, callback: SubmitVoteCallback): void {
+    submitGuardianSave(targetId: string | null, callback: SubmitVoteCallback): void {
         if (!this.socket) {
             callback({ success: false, error: 'Not connected' });
             return;

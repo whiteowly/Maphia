@@ -305,6 +305,9 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         paddingHorizontal: 10,
+        width: '100%',
+        maxWidth: 1200,
+        alignSelf: 'center',
     },
     cardContainer1: {
         flexDirection: 'column',
