@@ -1,27 +1,26 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
-import socketService, { Player } from './services/socketService';
+import socketService from './services/socketService';
+import { formatCountdown } from './types/game';
 
 const backgroundImage = require("../assets/images/lobby.png");
 
-const Night = () => {
+export default function Night() {
     const router = useRouter();
-    const { myRole, myPlayerId, maphiaTeammates, setPhase, timeRemaining, setTimeRemaining, players, setPlayers } = useGame();
-    const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+    const { settings, myRole, myPlayerId, setPhase, maphiaTeammates, players, setPlayers, timeRemaining, setTimeRemaining } = useGame();
+
+    // State
+    const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
     const [hasVoted, setHasVoted] = useState(false);
 
+    // Set up socket listeners
     useEffect(() => {
-        // Listen for phase changes
-        const unsubPhase = socketService.on('phase_changed', (data: { phase: string }) => {
-            setPhase(data.phase as any);
-            if (data.phase === 'guardian') {
-                router.replace('/guardian');
-            } else if (data.phase === 'discussion') {
-                router.replace('/game');
-            }
+        // Listen for room updates (player list)
+        const unsubRoomUpdate = socketService.on('room_update', (data: any) => {
+            setPlayers(data.players);
         });
 
         // Listen for timer updates
@@ -29,12 +28,7 @@ const Night = () => {
             setTimeRemaining(data.timeRemaining);
         });
 
-        // Listen for room updates to get player list
-        const unsubRoom = socketService.on('room_update', (data: { players: Player[] }) => {
-            setPlayers(data.players);
-        });
-
-        // Listen for night results (in case night resolves while on this screen)
+        // Listen for night results
         const unsubResults = socketService.on('night_results', (data: any) => {
             // Store in sessionStorage for nightResults screen to read
             if (typeof window !== 'undefined') {
@@ -43,221 +37,351 @@ const Night = () => {
             router.replace('/nightResults');
         });
 
+        // Listen for phase changes
+        const unsubPhase = socketService.on('phase_changed', (data: { phase: string; timeRemaining: number }) => {
+            setPhase(data.phase as any);
+            if (data.phase === 'discussion') {
+                router.replace('/game');
+            }
+            setTimeRemaining(data.timeRemaining);
+        });
+
+        // Cleanup
         return () => {
-            unsubPhase();
+            unsubRoomUpdate();
             unsubTimer();
-            unsubRoom();
             unsubResults();
+            unsubPhase();
         };
     }, []);
 
-    const handleVote = () => {
-        if (!selectedTarget) {
-            Alert.alert('Select a target', 'Please select someone to eliminate');
+    // Filter to alive players only (functional for display logic if needed)
+    // const alivePlayers = players.filter(p => !p.isDead);
+
+    const handleSelectPlayer = (playerId: string) => {
+        if (hasVoted) return;
+
+        // Validation logic
+        const player = players.find(p => p.id === playerId);
+        if (!player || player.isDead) return;
+
+        // Maphia validation
+        if (myRole === 'maphia') {
+            // Cannot target teammates
+            const isTeammate = maphiaTeammates.some(t => t.id === playerId);
+            if (isTeammate) return;
+        }
+
+        // Guardian validation
+        if (myRole === 'guardian') {
+            // Cannot save self
+            if (playerId === myPlayerId) return;
+        }
+
+        setSelectedPlayer(playerId === selectedPlayer ? null : playerId);
+    };
+
+    const handleConfirmAction = () => {
+        if (!selectedPlayer) {
+            Alert.alert('Select a player', 'Please select a player.');
             return;
         }
 
-        socketService.submitNightVote(selectedTarget, (response) => {
+        const callback = (response: any) => {
             if (response.success) {
                 setHasVoted(true);
             } else {
-                Alert.alert('Error', response.error || 'Failed to submit vote');
+                Alert.alert('Error', response.error || 'Failed to submit action');
             }
-        });
+        };
+
+        if (myRole === 'guardian') {
+            socketService.submitGuardianSave(selectedPlayer, callback);
+        } else if (myRole === 'maphia') {
+            socketService.submitNightVote(selectedPlayer, callback);
+        }
     };
 
-    const handleQuit = () => {
-        socketService.disconnect();
-        router.replace('/');
+    const handleSkipAction = () => {
+        const callback = (response: any) => {
+            if (response.success) {
+                setHasVoted(true);
+                setSelectedPlayer(null);
+            }
+        };
+
+        if (myRole === 'guardian') {
+            socketService.submitGuardianSave(null, callback);
+        } else if (myRole === 'maphia') {
+            socketService.submitNightVote(null, callback);
+        }
     };
 
-    // Filter out dead players, self, and mafia teammates (mafia can't kill themselves or teammates)
-    const teammateIds = maphiaTeammates.map(t => t.id);
-    const alivePlayers = players.filter(p =>
-        !p.isDead &&
-        p.id !== undefined &&
-        p.id !== myPlayerId &&  // Can't kill yourself
-        !teammateIds.includes(p.id)  // Can't kill teammates
-    );
-    const isMaphia = myRole === 'maphia';
+    const handleLeave = () => {
+        Alert.alert(
+            'Leave Game',
+            'Are you sure you want to leave the game?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Leave',
+                    style: 'destructive',
+                    onPress: () => {
+                        socketService.disconnect();
+                        router.replace('/');
+                    }
+                },
+            ]
+        );
+    };
+
+    // Get role display color and text
+    const getRoleDisplay = () => {
+        switch (myRole) {
+            case 'maphia':
+                return { color: '#FF4444', text: 'Maphia' };
+            case 'guardian':
+                return { color: '#3B82F6', text: 'Guardian Angel' };
+            case 'joker':
+                return { color: '#EC4899', text: 'Joker' };
+            default:
+                return { color: '#7BFF7B', text: 'Civilian' };
+        }
+    };
+    const roleDisplay = getRoleDisplay();
+
+    // Timer warning color (red when < 10 seconds)
+    const timerColor = timeRemaining < 10 ? '#FF4444' : 'white';
+
+    // Split players into columns for display
+    const displayPlayers = players; // Show all players
+    const numColumns = 3;
+    const playersPerColumn = Math.ceil(displayPlayers.length / numColumns);
+
+    const columns = [
+        displayPlayers.slice(0, playersPerColumn),
+        displayPlayers.slice(playersPerColumn, playersPerColumn * 2),
+        displayPlayers.slice(playersPerColumn * 2),
+    ].filter(col => col.length > 0);
+
+    // Dynamic Instruction Text
+    const getInstructionText = () => {
+        if (hasVoted) return 'Waiting for night to end...';
+        if (myRole === 'guardian') return 'Who do you want to save?';
+        if (myRole === 'maphia') return 'Who do you want to eliminate?';
+        return 'The night is dark...'; // For Civilians
+    };
+
+    const canAct = myRole === 'maphia' || myRole === 'guardian';
 
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground blurRadius={8} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
 
-            <Pressable onPress={handleQuit} style={styles.backButton}>
+            <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Leave game">
                 <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={styles.backText}>Quit</Text>
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave game</Text>
             </Pressable>
 
-            <View style={styles.container}>
-                <Text style={styles.title}>🌙 Night Phase</Text>
-                <Text style={styles.timer}>Time: {timeRemaining}s</Text>
+            <View>
+                {/* Timer */}
+                <Text style={[styles.topCenterText, { fontSize: 26, color: timerColor }]}>
+                    Night - {formatCountdown(timeRemaining)}
+                </Text>
 
-                {isMaphia ? (
-                    <>
-                        <Text style={styles.instruction}>
-                            Select a player to eliminate
-                        </Text>
+                {/* Role Display */}
+                <Text style={[styles.Text, { marginBottom: 0, fontSize: 26, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>
+                    Role - <Text style={{ color: roleDisplay.color }}>{roleDisplay.text}</Text>
+                </Text>
 
-                        {hasVoted ? (
-                            <View style={styles.votedContainer}>
-                                <MaterialIcons name="check-circle" size={60} color="#7BFF7B" />
-                                <Text style={styles.votedText}>Vote submitted!</Text>
-                                <Text style={styles.waitText}>Waiting for other Maphias...</Text>
+                {/* Voting Area */}
+                <View style={styles.cardContainer}>
+                    <Text style={{ fontFamily: 'Gruesome', fontSize: 21, color: 'white', marginTop: 0, alignSelf: 'center' }}>
+                        {getInstructionText()}
+                    </Text>
+
+                    {canAct && (
+                        <ScrollView
+                            style={styles.playersScroll}
+                            contentContainerStyle={styles.playersScrollContent}
+                            showsVerticalScrollIndicator={true}
+                            nestedScrollEnabled={true}
+                        >
+                            <View style={styles.playersColumnsRow}>
+                                {columns.map((column, colIndex) => (
+                                    <View key={colIndex} style={styles.playerColumn}>
+                                        {column.map((p) => {
+                                            const isMe = p.id === myPlayerId;
+                                            const isSelected = selectedPlayer === p.id;
+                                            const isDead = p.isDead;
+                                            // Check if this player is a mafia teammate (only visible to mafia)
+                                            const isMaphiaTeammate = myRole === 'maphia' &&
+                                                maphiaTeammates.some(t => t.id === p.id);
+
+                                            // Valid target checks for disabling visual
+                                            const isInvalidTarget = isDead ||
+                                                (myRole === 'maphia' && isMaphiaTeammate) ||
+                                                (myRole === 'guardian' && isMe);
+
+                                            return (
+                                                <TouchableOpacity
+                                                    key={p.id}
+                                                    style={[
+                                                        styles.playerCard,
+                                                        isSelected && styles.selectedCard,
+                                                        hasVoted && styles.disabledCard,
+                                                        (hasVoted || isInvalidTarget) && styles.disabledCard,
+                                                        isMe && styles.myCard,
+                                                    ]}
+                                                    onPress={() => handleSelectPlayer(p.id)}
+                                                    disabled={hasVoted || isInvalidTarget}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <View style={styles.playerCardContent}>
+                                                        <View style={styles.playerRow}>
+                                                            {/* Mafia hat icon - only visible to mafia players */}
+                                                            {isMaphiaTeammate && (
+                                                                <Text style={{ marginRight: 6 }}>🎩</Text>
+                                                            )}
+                                                            <Text style={[
+                                                                styles.playerText,
+                                                                isMe && styles.meText,
+                                                                isDead && styles.deadText,
+                                                            ]}>
+                                                                {p.name}
+                                                                {p.isHost && ' (Host)'}
+                                                                {isMe && ' (You)'}
+                                                                {isDead && ' ☠️'}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                ))}
                             </View>
-                        ) : (
-                            <>
-                                <FlatList
-                                    data={alivePlayers}
-                                    keyExtractor={(item) => item.id}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.playerCard,
-                                                selectedTarget === item.id && styles.selectedCard
-                                            ]}
-                                            onPress={() => setSelectedTarget(item.id)}
-                                        >
-                                            <Text style={styles.playerName}>{item.name}</Text>
-                                            {selectedTarget === item.id && (
-                                                <MaterialIcons name="check" size={24} color="#7BFF7B" />
-                                            )}
-                                        </TouchableOpacity>
-                                    )}
-                                    style={styles.list}
-                                />
+                        </ScrollView>
+                    )}
+
+                    {!canAct && (
+                        <View style={styles.waitingContainer}>
+                            <Text style={[styles.Text, { fontSize: 18, color: '#9CA3AF', textAlign: 'center', marginTop: 50 }]}>
+                                😴 Shhh... The night is quiet.
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+
+            {/* Bottom Controls */}
+            <View style={styles.bottomRightContainer}>
+                {canAct && (
+                    <>
+                        {/* Check if current player is dead */}
+                        {players.find(p => p.id === myPlayerId)?.isDead ? (
+                            <View style={styles.spectatorContainer}>
+                                <Text style={[styles.Text, { fontSize: 20, color: '#888', textAlign: 'center' }]}>
+                                    👻 You are spectating
+                                </Text>
+                                <Text style={[styles.Text, { fontSize: 14, color: '#666', textAlign: 'center', marginTop: 5 }]}>
+                                    Dead players cannot act
+                                </Text>
+                            </View>
+                        ) : !hasVoted ? (
+                            <View style={styles.buttonRow}>
+                                <TouchableOpacity
+                                    style={styles.skipButton}
+                                    onPress={handleSkipAction}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text style={[styles.Text, { fontSize: 20 }]}>Skip</Text>
+                                </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.voteButton, !selectedTarget && styles.disabledButton]}
-                                    onPress={handleVote}
-                                    disabled={!selectedTarget}
+                                    style={[styles.voteButton, !selectedPlayer && styles.disabledButton]}
+                                    onPress={handleConfirmAction}
+                                    activeOpacity={0.8}
+                                    disabled={!selectedPlayer}
                                 >
-                                    <Text style={styles.voteText}>Confirm Kill</Text>
+                                    <Text style={[styles.Text, { fontSize: 20 }]}>
+                                        {myRole === 'guardian' ? 'Protect' : 'Confirm'}
+                                    </Text>
                                 </TouchableOpacity>
-                            </>
+                            </View>
+                        ) : (
+                            <View style={styles.waitingContainer}>
+                                <Text style={[styles.Text, { fontSize: 18, color: '#7BFF7B' }]}>
+                                    ✓ {myRole === 'guardian' ? 'Protection' : 'Vote'} submitted
+                                </Text>
+                            </View>
                         )}
                     </>
-                ) : (
-                    <View style={styles.waitingContainer}>
-                        <Text style={styles.waitingText}>😴 The Maphia are plotting...</Text>
-                        <Text style={styles.waitingSubtext}>Stay quiet and hope you're not targeted!</Text>
-                    </View>
                 )}
             </View>
         </ImageBackground>
     );
-};
-
-export default Night;
+}
 
 const styles = StyleSheet.create({
     background: {
         flex: 1,
         resizeMode: "cover",
     },
-    container: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: 80,
+    Text: {
+        color: "white",
+        fontFamily: 'Gruesome',
+    },
+    cardContainer: {
+        flexDirection: 'column',
         alignItems: 'center',
+        padding: 15,
+        borderRadius: 3,
+        margin: 0,
+        marginLeft: 150,
+        marginRight: 150,
+        backgroundColor: 'transparent',
     },
-    title: {
-        fontFamily: 'Gruesome',
-        fontSize: 38,
-        color: '#9CA3AF',
-        marginBottom: 10,
-    },
-    timer: {
-        fontFamily: 'Gruesome',
-        fontSize: 24,
-        color: '#FCD34D',
-        marginBottom: 30,
-    },
-    instruction: {
-        fontFamily: 'Gruesome',
-        fontSize: 20,
-        color: '#D1D5DB',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    list: {
-        width: '90%',
-        maxHeight: 400,
-    },
-    playerCard: {
-        backgroundColor: 'rgba(31, 41, 55, 0.8)',
-        padding: 20,
-        marginVertical: 8,
-        borderRadius: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    skipButton: {
+        width: 100,
+        height: 40,
+        justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'transparent',
-    },
-    selectedCard: {
-        borderColor: '#7BFF7B',
-        backgroundColor: 'rgba(123, 255, 123, 0.2)',
-    },
-    playerName: {
-        fontFamily: 'Gruesome',
-        fontSize: 20,
-        color: 'white',
+        backgroundColor: '#444444',
+        borderRadius: 100,
+        marginTop: 10,
+        marginRight: 10,
     },
     voteButton: {
-        backgroundColor: '#DC2626',
-        paddingHorizontal: 50,
-        paddingVertical: 15,
-        borderRadius: 50,
-        marginTop: 30,
-        shadowColor: '#EF4444',
+        width: 100,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#610000ff',
+        borderRadius: 100,
+        marginTop: 10,
+        shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
+        shadowOpacity: 1,
         shadowRadius: 10,
+        elevation: 10,
     },
     disabledButton: {
-        backgroundColor: '#444444',
+        backgroundColor: '#333333',
         shadowOpacity: 0,
     },
-    voteText: {
-        fontFamily: 'Gruesome',
-        fontSize: 24,
-        color: 'white',
-    },
-    votedContainer: {
+    buttonRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 50,
+        justifyContent: 'flex-end',
     },
-    votedText: {
-        fontFamily: 'Gruesome',
-        fontSize: 28,
-        color: '#7BFF7B',
-        marginTop: 20,
-    },
-    waitText: {
-        fontFamily: 'Gruesome',
-        fontSize: 18,
-        color: '#9CA3AF',
+    spectatorContainer: {
         marginTop: 10,
+        padding: 15,
+        alignItems: 'center',
     },
     waitingContainer: {
-        alignItems: 'center',
-        marginTop: 100,
-        paddingHorizontal: 40,
-    },
-    waitingText: {
-        fontFamily: 'Gruesome',
-        fontSize: 32,
-        color: '#9CA3AF',
-        textAlign: 'center',
-    },
-    waitingSubtext: {
-        fontFamily: 'Gruesome',
-        fontSize: 18,
-        color: '#6B7280',
-        textAlign: 'center',
-        marginTop: 20,
+        marginTop: 10,
     },
     backButton: {
         position: 'absolute',
@@ -268,10 +392,90 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    backText: {
-        fontFamily: 'Gruesome',
-        fontSize: 20,
+    bottomRightContainer: {
+        position: 'absolute',
+        bottom: 20,
+        right: 16,
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+        zIndex: 100,
+    },
+    playersColumnsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        paddingHorizontal: 8,
+        marginTop: 6,
+    },
+    playerColumn: {
+        flex: 1,
+        paddingHorizontal: 8,
+        alignItems: 'center',
+        marginHorizontal: 6,
+    },
+    playerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    playerText: {
         color: 'white',
-        marginLeft: 10,
+        fontFamily: 'Gruesome',
+        fontSize: 18,
+        textAlign: 'center',
+    },
+    meText: {
+        color: '#FFD700',
+    },
+    deadText: {
+        color: 'gray',
+        textDecorationLine: 'line-through',
+    },
+    topCenterText: {
+        position: 'absolute',
+        top: 20,
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        color: 'white',
+        fontFamily: 'Gruesome',
+        zIndex: 20,
+    },
+    playerCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 30,
+        marginVertical: 6,
+        minWidth: 180,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: 'transparent',
+    },
+    selectedCard: {
+        borderColor: '#FF4444',
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    },
+    myCard: {
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        borderColor: 'rgba(255, 215, 0, 0.3)',
+    },
+    disabledCard: {
+        opacity: 0.6,
+    },
+    playersScroll: {
+        width: '100%',
+        maxHeight: 300,
+        paddingHorizontal: 8,
+        marginTop: 8,
+    },
+    playersScrollContent: {
+        paddingBottom: 12,
+        alignItems: 'center',
+    },
+    playerCardContent: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

@@ -1,9 +1,25 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ImageBackground, Platform, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
 import socketService, { SERVER_URL } from './services/socketService';
+
+// Web-compatible alert helper
+const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
+    if (Platform.OS === 'web') {
+        if (buttons && buttons.length > 0) {
+            const confirmed = window.confirm(`${title}\n\n${message}`);
+            if (confirmed && buttons[0]?.onPress) {
+                buttons[0].onPress();
+            }
+        } else {
+            window.alert(`${title}\n\n${message}`);
+        }
+    } else {
+        Alert.alert(title, message, buttons);
+    }
+};
 
 const backgroundImage = require("../assets/images/background.jpeg");
 
@@ -15,15 +31,41 @@ export default function Join() {
     const [playerName, setPlayerName] = useState(savedName || '');
     const [isConnecting, setIsConnecting] = useState(false);
 
+    // Bug 2 Fix: Map server errors to user-friendly messages
+    const getErrorMessage = (error: string): { title: string; message: string } => {
+        switch (error) {
+            case 'Room not found':
+                return {
+                    title: 'Room Not Found',
+                    message: 'Check if the code is correct and try again. The room may have been closed or the code might be wrong.'
+                };
+            case 'Room is full':
+                return {
+                    title: 'Lobby Full',
+                    message: 'This lobby has reached its maximum player limit. Ask the host to increase the player count or try joining a different game.'
+                };
+            case 'Game already in progress':
+                return {
+                    title: 'Game Already Started',
+                    message: 'This game has already begun. You cannot join a game that is in progress.'
+                };
+            default:
+                return {
+                    title: 'Unable to Join',
+                    message: error || 'Failed to join room. Please check the code and try again.'
+                };
+        }
+    };
+
     const handleJoin = async () => {
         // Validate inputs
         if (!roomCode.trim()) {
-            Alert.alert('Error', 'Please enter a room code');
+            showAlert('Error', 'Please enter a room code');
             return;
         }
 
         if (!playerName.trim()) {
-            Alert.alert(
+            showAlert(
                 'Name Required',
                 'Please set your display name in Settings first.',
                 [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
@@ -52,12 +94,14 @@ export default function Join() {
                     // Navigate to lobby
                     router.push('/lobby');
                 } else {
-                    Alert.alert('Error', response.error || 'Failed to join room');
+                    // Bug 2 Fix: Show user-friendly error messages
+                    const errorInfo = getErrorMessage(response.error || '');
+                    showAlert(errorInfo.title, errorInfo.message);
                 }
             });
         } catch (error) {
             setIsConnecting(false);
-            Alert.alert('Connection Error', 'Failed to connect to server. Make sure the server is running.');
+            showAlert('Connection Error', 'Failed to connect to server. Make sure the server is running and try again.');
             console.error('Connection error:', error);
         }
     };

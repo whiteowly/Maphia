@@ -134,22 +134,31 @@ export default function Lobby() {
     };
 
     const handleLeave = () => {
-        Alert.alert(
-            'Leave Lobby',
-            'Are you sure you want to leave?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Leave',
-                    style: 'destructive',
-                    onPress: () => {
-                        console.log('Leaving lobby...');
-                        socketService.disconnect();
-                        router.replace('/');
-                    }
-                },
-            ]
-        );
+        // Use window.confirm on web, Alert.alert on mobile
+        if (typeof window !== 'undefined' && window.confirm) {
+            if (window.confirm('Are you sure you want to leave?')) {
+                console.log('Leaving lobby...');
+                socketService.disconnect();
+                router.replace('/');
+            }
+        } else {
+            Alert.alert(
+                'Leave Lobby',
+                'Are you sure you want to leave?',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Leave',
+                        style: 'destructive',
+                        onPress: () => {
+                            console.log('Leaving lobby...');
+                            socketService.disconnect();
+                            router.replace('/');
+                        }
+                    },
+                ]
+            );
+        }
     };
 
     // Calculate civilians

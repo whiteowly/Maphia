@@ -159,38 +159,42 @@ class GameRoom {
     tallyVotes() {
         const voteCounts = new Map();
 
+        // Count votes including skips (null)
         for (const targetId of this.votes.values()) {
-            if (targetId) {
-                voteCounts.set(targetId, (voteCounts.get(targetId) || 0) + 1);
-            }
+            const key = targetId || 'SKIP';
+            voteCounts.set(key, (voteCounts.get(key) || 0) + 1);
         }
 
-        // Find player with most votes
+        // Find option with most votes
         let maxVotes = 0;
-        let eliminated = null;
+        let winnerKey = null; // 'SKIP' or playerId
         let tie = false;
 
-        for (const [playerId, count] of voteCounts) {
+        for (const [key, count] of voteCounts) {
             if (count > maxVotes) {
                 maxVotes = count;
-                eliminated = playerId;
+                winnerKey = key;
                 tie = false;
             } else if (count === maxVotes) {
                 tie = true;
             }
         }
 
-        // If tie, no one is eliminated
+        // If tie, no one is eliminated (even if tie is between two players or player and skip)
         if (tie) {
             return { eliminated: null, tie: true, voteCounts: Object.fromEntries(voteCounts) };
         }
 
-        // Eliminate player
-        if (eliminated) {
-            const player = this.players.get(eliminated);
-            if (player) {
-                player.isDead = true;
-            }
+        // If 'SKIP' won, no one is eliminated
+        if (winnerKey === 'SKIP') {
+            return { eliminated: null, tie: false, voteCounts: Object.fromEntries(voteCounts) };
+        }
+
+        // Specific player eliminated
+        const eliminated = winnerKey;
+        const player = this.players.get(eliminated);
+        if (player) {
+            player.isDead = true;
         }
 
         return {
@@ -483,7 +487,27 @@ io.on('connection', (socket) => {
             totalVotes: room.votes.size,
             totalVoters: Array.from(room.players.values()).filter(p => !p.isDead).length,
         });
+
+        // Check if all alive players have voted
+        checkVotingComplete(room);
     });
+
+    // Helper function to check if all alive players have voted
+    function checkVotingComplete(room) {
+        if (room.phase !== 'voting') return;
+
+        const alivePlayers = Array.from(room.players.values()).filter(p => !p.isDead);
+        const allVoted = alivePlayers.every(p => room.votes.has(p.id));
+
+        if (allVoted) {
+            console.log(`[DEBUG] All players voted, ending voting phase early`);
+            if (room.timerInterval) {
+                clearInterval(room.timerInterval);
+                room.timerInterval = null;
+            }
+            endVotingPhase(room);
+        }
+    }
 
     // Submit a night vote (Maphia only)
     socket.on('submit_night_vote', (data, callback) => {
@@ -501,25 +525,26 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Prevent dead Maphia from killing
+        if (player.isDead) {
+            callback({ success: false, error: 'Dead players cannot vote' });
+            return;
+        }
+
         room.nightVotes.set(playerId, targetId);
         callback({ success: true });
 
-        // Check if all Maphias voted
-        const aliveMaphias = Array.from(room.players.values())
-            .filter(p => p.role === 'maphia' && !p.isDead);
-
-        if (room.nightVotes.size >= aliveMaphias.length) {
-            clearInterval(room.timerInterval);
-            startGuardianPhase(room); // Go to guardian phase
-        }
+        // Bug 4 Fix: Check if night is complete (both Maphia and Guardian voted)
+        checkNightComplete(room);
     });
 
-    // Submit guardian save (Guardian only)
+    // Submit guardian save (Guardian only) - Bug 4 Fix: Now accepts during 'night' phase (simultaneous)
     socket.on('submit_guardian_save', (data, callback) => {
         const { targetId } = data;
         const room = rooms.get(currentRoom);
 
-        if (!room || room.phase !== 'guardian') {
+        // Bug 4 Fix: Guardian can now vote during 'night' phase (simultaneous with Maphia)
+        if (!room || (room.phase !== 'guardian' && room.phase !== 'night')) {
             callback({ success: false, error: 'Invalid phase' });
             return;
         }
@@ -538,14 +563,10 @@ io.on('connection', (socket) => {
 
         room.guardianSave = targetId;
         callback({ success: true });
+        console.log(`[DEBUG] Guardian submitted save for room ${room.roomCode}`);
 
-        // Immediately resolve night - clear timer first
-        console.log(`[DEBUG] Guardian submitted save for room ${room.roomCode}, clearing timer and resolving night`);
-        if (room.timerInterval) {
-            clearInterval(room.timerInterval);
-            room.timerInterval = null;
-        }
-        resolveNightPhase(room);
+        // Bug 4 Fix: Check if night is complete (both Maphia and Guardian voted)
+        checkNightComplete(room);
     });
 
     // Toggle mute
@@ -600,12 +621,12 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Helper function to start night phase
+    // Helper function to start night phase - Bug 4 Fix: Both Maphia and Guardian vote simultaneously
     function startNightPhase(room) {
         room.phase = 'night';
         room.nightVotes.clear();
         room.guardianSave = null;
-        room.timeRemaining = 20; // 20 seconds for night
+        room.timeRemaining = 25; // Bug 4 Fix: Extended to 25 seconds for simultaneous voting
 
         io.to(room.roomCode).emit('phase_changed', {
             phase: 'night',
@@ -631,9 +652,37 @@ io.on('connection', (socket) => {
 
             if (room.timeRemaining <= 0) {
                 clearInterval(room.timerInterval);
-                startGuardianPhase(room);
+                room.timerInterval = null;
+                // Bug 4 Fix: Resolve directly - no separate guardian phase
+                resolveNightPhase(room);
             }
         }, 1000);
+    }
+
+    // Bug 4 Fix: Helper function to check if night is complete (all required votes submitted)
+    function checkNightComplete(room) {
+        if (room.phase !== 'night') return;
+
+        // Check if all alive Maphias have voted
+        const aliveMaphias = Array.from(room.players.values())
+            .filter(p => p.role === 'maphia' && !p.isDead);
+        const allMaphiasVoted = room.nightVotes.size >= aliveMaphias.length;
+
+        // Check if Guardian has voted (or is dead/doesn't exist)
+        const guardian = Array.from(room.players.values()).find(p => p.role === 'guardian');
+        const guardianVoted = !guardian || guardian.isDead || room.guardianSave !== null;
+
+        console.log(`[DEBUG] checkNightComplete: maphias=${allMaphiasVoted}, guardian=${guardianVoted}`);
+
+        // If both have submitted, resolve night early
+        if (allMaphiasVoted && guardianVoted) {
+            console.log(`[DEBUG] All night actions complete, resolving early`);
+            if (room.timerInterval) {
+                clearInterval(room.timerInterval);
+                room.timerInterval = null;
+            }
+            resolveNightPhase(room);
+        }
     }
 
     // Helper function to start guardian phase (or skip if guardian is dead)
@@ -690,8 +739,8 @@ io.on('connection', (socket) => {
 
     // Resolve night: Determine who dies (Maphia kill vs Guardian/Joker saves)
     function resolveNightPhase(room) {
-        // Guard: Only run if in guardian phase
-        if (room.phase !== 'guardian') {
+        // Bug 4 Fix: Guard updated - now resolves from 'night' phase (not 'guardian')
+        if (room.phase !== 'night' && room.phase !== 'guardian') {
             console.log(`[DEBUG] Skipping resolveNightPhase - already in phase ${room.phase}`);
             return;
         }
@@ -700,6 +749,28 @@ io.on('connection', (socket) => {
         room.phase = 'night_results'; // Set to intermediate phase to prevent duplicate calls
 
         try {
+            // FIRST: Check if Guardian Angel saved a Maphia (ALWAYS DIES)
+            // This must be checked before vote counts in case Maphia skips
+            if (room.guardianSave) {
+                const savedPlayer = room.players.get(room.guardianSave);
+                if (savedPlayer?.role === 'maphia') {
+                    // GUARDIAN DIES for saving Maphia!
+                    const guardian = Array.from(room.players.values()).find(p => p.role === 'guardian');
+                    if (guardian) {
+                        guardian.isDead = true;
+                    }
+
+                    console.log(`[DEBUG] Guardian made a mistake - saved Maphia`);
+
+                    // Game design choice: Guardian dies immediately.
+                    // We return here to highlight the mistake.
+                    // Note: If Maphia ALSO voted effectively, that kill is effectively skipped in this simplified flow.
+                    // This is acceptable as the Guardian Mistake is a major event.
+                    emitNightResults(room, guardian?.id, null, false, 'guardian_mistake');
+                    return;
+                }
+            }
+
             // Tally Maphia votes
             const voteCounts = new Map();
 
@@ -738,21 +809,11 @@ io.on('connection', (socket) => {
 
             console.log(`[DEBUG] Target selected: ${targetedPlayer}, guardianSave: ${room.guardianSave}`);
 
-            // Check if Guardian Angel saved them
+
+
+
+            // Check if Guardian Angel saved the TARGET
             if (room.guardianSave === targetedPlayer) {
-                // Did Guardian save a Maphia?
-                if (target?.role === 'maphia') {
-                    // GUARDIAN DIES for saving Maphia!
-                    const guardian = Array.from(room.players.values()).find(p => p.role === 'guardian');
-                    if (guardian) {
-                        guardian.isDead = true;
-                    }
-
-                    console.log(`[DEBUG] Guardian made a mistake - saved Maphia`);
-                    emitNightResults(room, guardian?.id, targetedPlayer, false, 'guardian_mistake');
-                    return;
-                }
-
                 // Guardian saved civilian/joker correctly
                 console.log(`[DEBUG] Guardian saved the target successfully`);
                 emitNightResults(room, null, targetedPlayer, true, null);
@@ -773,7 +834,7 @@ io.on('connection', (socket) => {
             // Player dies
             console.log(`[DEBUG] Player ${targetedPlayer} dies`);
             target.isDead = true;
-            emitNightResults(room, targetedPlayer, targetedPlayer, false, null);
+            emitNightResults(room, targetedPlayer, targetedPlayer, false, null); // Emitting kill result
         } catch (error) {
             console.error(`[ERROR] resolveNightPhase failed for room ${room.roomCode}:`, error);
             // Try to recover by moving to discussion anyway

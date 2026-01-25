@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { DEFAULT_GAME_SETTINGS, GameSettings, GameState, generateRoomCode, Player } from '../types/game';
 
 interface GameContextType {
@@ -56,6 +57,8 @@ interface GameContextType {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
+const PLAYER_NAME_KEY = '@maphia_player_name';
+
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [settings, setSettings] = useState<GameSettings>({
         ...DEFAULT_GAME_SETTINGS,
@@ -70,7 +73,32 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [myPlayerName, setMyPlayerName] = useState<string>('');
     const [isHost, setIsHost] = useState(false);
     const [maphiaTeammates, setMaphiaTeammates] = useState<{ id: string; name: string }[]>([]);
-    const [playerName, setPlayerName] = useState<string>('');
+    const [playerName, setPlayerNameState] = useState<string>('');
+
+    // Bug 1 Fix: Load playerName from AsyncStorage on mount
+    useEffect(() => {
+        const loadPlayerName = async () => {
+            try {
+                const savedName = await AsyncStorage.getItem(PLAYER_NAME_KEY);
+                if (savedName) {
+                    setPlayerNameState(savedName);
+                }
+            } catch (error) {
+                console.error('Failed to load player name:', error);
+            }
+        };
+        loadPlayerName();
+    }, []);
+
+    // Bug 1 Fix: Wrapper to save playerName to AsyncStorage when changed
+    const setPlayerName = async (name: string) => {
+        setPlayerNameState(name);
+        try {
+            await AsyncStorage.setItem(PLAYER_NAME_KEY, name);
+        } catch (error) {
+            console.error('Failed to save player name:', error);
+        }
+    };
 
     const updateSettings = (updates: Partial<GameSettings>) => {
         setSettings(prev => ({ ...prev, ...updates }));

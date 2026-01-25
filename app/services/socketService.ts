@@ -105,8 +105,9 @@ class SocketService {
             }
 
             this.socket = io(SERVER_URL, {
-                transports: ['websocket'],
+                transports: ['polling', 'websocket'], // Allow polling fallback for Render compatibility
                 autoConnect: true,
+                timeout: 20000, // Increase timeout for Render cold starts
             });
 
             this.socket.on('connect', () => {
@@ -161,6 +162,7 @@ class SocketService {
             'timer_update',
             'vote_submitted',
             'voting_results',
+            'night_results', // Bug 3 Fix: Add missing event for night results
             'game_over',
             'return_to_lobby',
             'host_left',
