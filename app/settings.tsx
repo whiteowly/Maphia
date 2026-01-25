@@ -3,11 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ImageBackground, Linking, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
 import { useMusic } from './context/MusicContext';
 
-const backgroundImage = require("../assets/images/background.jpeg");
+const backgroundImage = require("../assets/images/background.png");
 
 // Settings storage keys
 const SETTINGS_KEYS = {
@@ -134,129 +134,71 @@ export default function Settings() {
 
             <Text style={styles.title}>Maphia</Text>
 
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Profile Section */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>👤 Profile</Text>
+            <View style={styles.container}>
+                <View style={styles.rowContainer}>
+                    {/* Profile Section */}
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>Profile</Text>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Display Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={inputName}
-                            onChangeText={(text) => {
-                                setInputName(text);
-                                setHasChanges(true);
-                            }}
-                            placeholder="Enter your name..."
-                            placeholderTextColor="#666"
-                            maxLength={15}
-                            autoCapitalize="none"
-                        />
-                        <Text style={styles.hint}>
-                            This name will be shown to other players
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Audio Section */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🔊 Audio</Text>
-
-                    <View style={styles.sliderContainer}>
-                        <View style={styles.sliderHeader}>
-                            <Text style={styles.label}>Music Volume</Text>
-                            <Text style={styles.sliderValue}>{Math.round(musicVolume)}%</Text>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Display Name</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={inputName}
+                                onChangeText={(text) => {
+                                    setInputName(text);
+                                    setHasChanges(true);
+                                }}
+                                placeholder="Enter your name..."
+                                placeholderTextColor="#666"
+                                maxLength={15}
+                                autoCapitalize="none"
+                            />
+                            <Text style={styles.hint}>
+                                This name will be shown to other players
+                            </Text>
                         </View>
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={0}
-                            maximumValue={100}
-                            value={musicVolume}
-                            onValueChange={handleMusicVolumeChange}
-                            minimumTrackTintColor="#FF4444"
-                            maximumTrackTintColor="#444"
-                            thumbTintColor="#FF4444"
-                        />
                     </View>
 
-                    <View style={styles.sliderContainer}>
-                        <View style={styles.sliderHeader}>
-                            <Text style={styles.label}>Sound Effects</Text>
-                            <Text style={styles.sliderValue}>{Math.round(sfxVolume)}%</Text>
+                    {/* Audio Section */}
+                    <View style={styles.card}>
+
+
+                        <View style={styles.sliderContainer}>
+                            <View style={styles.sliderHeader}>
+                                <Text style={styles.label}>Music Volume</Text>
+                                <Text style={styles.sliderValue}>{Math.round(musicVolume)}%</Text>
+                            </View>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={0}
+                                maximumValue={100}
+                                value={musicVolume}
+                                onValueChange={handleMusicVolumeChange}
+                                minimumTrackTintColor="#FF4444"
+                                maximumTrackTintColor="#444"
+                                thumbTintColor="#FF4444"
+                            />
                         </View>
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={0}
-                            maximumValue={100}
-                            value={sfxVolume}
-                            onValueChange={handleSfxVolumeChange}
-                            minimumTrackTintColor="#FF4444"
-                            maximumTrackTintColor="#444"
-                            thumbTintColor="#FF4444"
-                        />
-                        <Text style={styles.hint}>Coming soon!</Text>
-                    </View>
-                </View>
 
-                {/* Display Section */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🌙 Display</Text>
-
-                    <View style={styles.sliderContainer}>
-                        <View style={styles.sliderHeader}>
-                            <Text style={styles.label}>Brightness</Text>
-                            <Text style={styles.sliderValue}>{Math.round(brightness)}%</Text>
+                        <View style={styles.sliderContainer}>
+                            <View style={styles.sliderHeader}>
+                                <Text style={styles.label}>Brightness</Text>
+                                <Text style={styles.sliderValue}>{Math.round(brightness)}%</Text>
+                            </View>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={20}
+                                maximumValue={100}
+                                value={brightness}
+                                onValueChange={handleBrightnessChange}
+                                minimumTrackTintColor="#FF4444"
+                                maximumTrackTintColor="#444"
+                                thumbTintColor="#FF4444"
+                            />
                         </View>
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={20}
-                            maximumValue={100}
-                            value={brightness}
-                            onValueChange={handleBrightnessChange}
-                            minimumTrackTintColor="#FFD700"
-                            maximumTrackTintColor="#444"
-                            thumbTintColor="#FFD700"
-                        />
                     </View>
-                </View>
 
-                {/* Legal Section */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>📜 Legal</Text>
-
-                    <TouchableOpacity
-                        style={styles.legalButton}
-                        onPress={() => openLink('https://maphia.app/terms')}
-                    >
-                        <MaterialIcons name="description" size={24} color="#AAA" />
-                        <Text style={styles.legalButtonText}>Terms of Service</Text>
-                        <MaterialIcons name="chevron-right" size={24} color="#666" />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.legalButton}
-                        onPress={() => openLink('https://maphia.app/privacy')}
-                    >
-                        <MaterialIcons name="privacy-tip" size={24} color="#AAA" />
-                        <Text style={styles.legalButtonText}>Privacy Policy</Text>
-                        <MaterialIcons name="chevron-right" size={24} color="#666" />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.legalButton}
-                        onPress={() => openLink('https://maphia.app/licenses')}
-                    >
-                        <MaterialIcons name="gavel" size={24} color="#AAA" />
-                        <Text style={styles.legalButtonText}>Open Source Licenses</Text>
-                        <MaterialIcons name="chevron-right" size={24} color="#666" />
-                    </TouchableOpacity>
-
-                    <Text style={styles.versionText}>Maphia v1.0.0</Text>
                 </View>
 
                 {/* Save Button */}
@@ -270,9 +212,7 @@ export default function Settings() {
                         {hasChanges ? 'Save Changes' : 'No Changes'}
                     </Text>
                 </TouchableOpacity>
-
-                <View style={styles.bottomPadding} />
-            </ScrollView>
+            </View>
         </ImageBackground>
     );
 }
@@ -287,12 +227,17 @@ const styles = StyleSheet.create({
         backgroundColor: 'black',
         zIndex: 100,
     },
-    scrollView: {
+    container: {
         flex: 1,
-    },
-    scrollContent: {
         paddingHorizontal: 20,
-        paddingTop: 10,
+        paddingBottom: 20,
+    },
+    rowContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        gap: 15,
+        alignItems: 'center', // Center vertically
+        justifyContent: 'space-between',
     },
     title: {
         fontFamily: 'Gruesome',
@@ -305,47 +250,50 @@ const styles = StyleSheet.create({
         marginRight: 30,
     },
     card: {
+        flex: 1,
         backgroundColor: '#22010180',
         borderRadius: 15,
-        padding: 20,
-        marginBottom: 15,
+        padding: 15,
         borderWidth: 1,
         borderColor: 'rgba(255, 0, 0, 0.3)',
+        maxHeight: '80%', // Limit height to ensure it fits
+        justifyContent: 'center',
     },
     cardTitle: {
         fontFamily: 'Gruesome',
-        fontSize: 24,
-        color: 'white',
-        marginBottom: 15,
+        fontSize: 20, // Slightly smaller
+        color: '#cabdb7',
+        marginBottom: 10,
+        textAlign: 'flex-start',
     },
     inputContainer: {
         marginBottom: 10,
     },
     label: {
         fontFamily: 'Gruesome',
-        fontSize: 16,
-        color: '#CCCCCC',
-        marginBottom: 8,
+        fontSize: 14, // Slightly smaller
+        color: '#cabdb7',
+        marginBottom: 5,
     },
     input: {
         backgroundColor: 'rgba(30, 0, 0, 0.8)',
         borderWidth: 2,
         borderColor: '#FF4444',
         borderRadius: 10,
-        paddingHorizontal: 15,
-        paddingVertical: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
         fontFamily: 'Gruesome',
-        fontSize: 18,
+        fontSize: 16,
         color: 'white',
     },
     hint: {
         fontFamily: 'Gruesome',
-        fontSize: 12,
+        fontSize: 10, // Slightly smaller
         color: '#666',
-        marginTop: 6,
+        marginTop: 4,
     },
     sliderContainer: {
-        marginBottom: 20,
+        marginBottom: 15,
     },
     sliderHeader: {
         flexDirection: 'row',
@@ -354,38 +302,17 @@ const styles = StyleSheet.create({
     },
     slider: {
         width: '100%',
-        height: 40,
+        height: 30, // Compress height
     },
     sliderValue: {
         fontFamily: 'Gruesome',
-        fontSize: 16,
-        color: '#FF4444',
-    },
-    legalButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    legalButtonText: {
-        fontFamily: 'Gruesome',
-        fontSize: 16,
-        color: '#CCC',
-        flex: 1,
-        marginLeft: 15,
-    },
-    versionText: {
-        fontFamily: 'Gruesome',
         fontSize: 14,
-        color: '#555',
-        textAlign: 'center',
-        marginTop: 15,
+        color: '#cabdb7',
     },
     saveButton: {
         backgroundColor: '#610000',
         borderRadius: 50,
-        paddingVertical: 15,
+        paddingVertical: 12, // reduce padding
         paddingHorizontal: 30,
         alignItems: 'center',
         shadowColor: '#FF0000',
@@ -394,6 +321,8 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 10,
         marginTop: 10,
+        alignSelf: 'center', // Center button
+        width: '30%', // Controlled width
     },
     saveButtonDisabled: {
         backgroundColor: '#333',
@@ -401,8 +330,8 @@ const styles = StyleSheet.create({
     },
     saveButtonText: {
         fontFamily: 'Gruesome',
-        fontSize: 22,
-        color: 'white',
+        fontSize: 20,
+        color: '#cabdb7',
     },
     backButton: {
         position: 'absolute',
@@ -410,8 +339,5 @@ const styles = StyleSheet.create({
         left: 15,
         padding: 6,
         zIndex: 20,
-    },
-    bottomPadding: {
-        height: 40,
     },
 });
