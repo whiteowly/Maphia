@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ImageBackground, Platform, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
-import socketService, { SERVER_URL } from './services/socketService';
+import socketService from './services/socketService';
 
 // Web-compatible alert helper
 const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
@@ -21,7 +21,7 @@ const showAlert = (title: string, message: string, buttons?: { text: string; onP
     }
 };
 
-const backgroundImage = require("../assets/images/background.jpeg");
+const backgroundImage = require("../assets/images/background.png");
 
 export default function Join() {
     const router = useRouter();
@@ -116,10 +116,10 @@ export default function Join() {
             <Text style={[styles.Text, { marginBottom: 0, fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
 
             <View style={styles.cardContainer}>
-                <Text style={[styles.Text, { fontSize: 30, marginTop: 4, alignSelf: 'center' }]}>Join a Game</Text>
+                <Text style={[styles.Text, { fontSize: 30, marginTop: 0, alignSelf: 'center', color: '#cabdb7' }]}>Join a Game</Text>
 
                 {/* Player Name Input */}
-                <Text style={[styles.Text, { fontSize: 20, marginLeft: 10, marginTop: 20 }]}>Your Name</Text>
+                <Text style={[styles.Text, { fontSize: 20, marginLeft: 10, marginTop: 5, color: '#cabdb7' }]}>Your Name</Text>
                 <TextInput
                     style={styles.input}
                     value={playerName}
@@ -128,9 +128,7 @@ export default function Join() {
                     placeholderTextColor="#999"
                     maxLength={15}
                 />
-
-                {/* Room Code Input */}
-                <Text style={[styles.Text, { fontSize: 20, marginLeft: 10, marginTop: 15 }]}>Room Code</Text>
+                <Text style={[styles.Text, { fontSize: 20, marginLeft: 10, marginTop: 5, color: '#cabdb7' }]}>Room Code</Text>
                 <TextInput
                     style={styles.input}
                     value={roomCode}
@@ -141,12 +139,6 @@ export default function Join() {
                     autoCapitalize="characters"
                 />
 
-                {/* Server Status */}
-                <View style={styles.serverStatus}>
-                    <Text style={{ fontFamily: 'Gruesome', fontSize: 12, color: '#888' }}>
-                        Server: {SERVER_URL.replace('http://', '')}
-                    </Text>
-                </View>
             </View>
 
             <View style={{ alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
@@ -162,7 +154,7 @@ export default function Join() {
                             <Text style={[styles.Text, { fontSize: 20, marginLeft: 10 }]}>Joining...</Text>
                         </View>
                     ) : (
-                        <Text style={[styles.Text, { fontSize: 25 }]}>Join Game</Text>
+                        <Text style={[styles.Text, { fontSize: 25 }]}>Join</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -191,22 +183,22 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
+
     },
     shareButton: {
         width: '25%',
-        height: '40%',
+        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#610000ff',
         borderRadius: 100,
-        marginTop: 10,
-        marginBottom: 35,
+        marginTop: 0,
+        marginBottom: 7,
         shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,
         shadowRadius: 10,
-        elevation: 10,
+
     },
     disabledButton: {
         backgroundColor: '#444444',
@@ -223,9 +215,9 @@ const styles = StyleSheet.create({
         zIndex: 20,
     },
     input: {
-        height: 45,
+        height: 43,
         marginHorizontal: 12,
-        marginTop: 8,
+        marginTop: 3,
         borderWidth: 1,
         borderColor: 'rgba(255, 0, 0, 0.3)',
         padding: 12,
