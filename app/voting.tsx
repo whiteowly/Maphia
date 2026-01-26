@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     Text: {
-        color: "white",
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
     },
     cardContainer: {
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     playerText: {
-        color: 'white',
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
         fontSize: 18,
         textAlign: 'center',
