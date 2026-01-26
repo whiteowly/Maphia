@@ -166,10 +166,10 @@ export default function Night() {
 
     // Dynamic Instruction Text
     const getInstructionText = () => {
-        if (hasVoted) return 'Waiting for night to end...';
+        if (hasVoted) return 'Waiting for night to end';
         if (myRole === 'guardian') return 'Who do you want to save?';
         if (myRole === 'maphia') return 'Who do you want to eliminate?';
-        return 'The night is dark...'; // For Civilians
+        return 'Night Phase'; // For Civilians
     };
 
     const canAct = myRole === 'maphia' || myRole === 'guardian';
@@ -186,7 +186,7 @@ export default function Night() {
             <View>
                 {/* Timer */}
                 <Text style={[styles.topCenterText, { fontSize: 26, color: timerColor }]}>
-                    Night - {formatCountdown(timeRemaining)}
+                    {formatCountdown(timeRemaining)}
                 </Text>
 
                 {/* Role Display */}
@@ -267,7 +267,7 @@ export default function Night() {
                     {!canAct && (
                         <View style={styles.waitingContainer}>
                             <Text style={[styles.Text, { fontSize: 18, color: '#9CA3AF', textAlign: 'center', marginTop: 50 }]}>
-                                😴 Shhh... The night is quiet.
+                                Maphias are killing, guardian is saving
                             </Text>
                         </View>
                     )}

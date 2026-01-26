@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     roleText: {
         fontFamily: 'Gruesome',
         fontSize: 32,
-        marginTop: 20,
+        marginTop: 0,
         textShadowColor: 'rgba(59, 130, 246, 0.5)',
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 15,
