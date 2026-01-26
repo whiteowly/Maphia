@@ -131,7 +131,7 @@ export default function Settings() {
             />
 
             <Pressable onPress={() => router.back()} style={styles.backButton}>
-                <MaterialIcons name="arrow-back" size={30} color="white" />
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
             </Pressable>
 
             <Text style={styles.title}>Maphia</Text>
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
         fontSize: 20, // Slightly smaller
         color: '#cabdb7',
         marginBottom: 10,
-        textAlign: 'flex-start',
+        textAlign: 'left',
     },
     inputContainer: {
         marginBottom: 10,
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         fontFamily: 'Gruesome',
         fontSize: 16,
-        color: 'white',
+        color: '#cabdb7',
     },
     hint: {
         fontFamily: 'Gruesome',

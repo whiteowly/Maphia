@@ -75,8 +75,8 @@ const RoleRevealMaphia = () => {
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleQuit} style={styles.backButton} accessibilityLabel="Quit game">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Quit</Text>
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Quit</Text>
             </Pressable>
 
             <Text style={[styles.Text, { marginBottom: 0, fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     continueText: {
         fontFamily: 'Gruesome',
         fontSize: 24,
-        color: 'white',
+        color: '#cabdb7',
     },
     backButton: {
         position: 'absolute',

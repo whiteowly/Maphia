@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     winTitle: {
         fontFamily: 'Gruesome',
         fontSize: 40,
-        color: 'white',
+        color: '#cabdb7',
         marginTop: 0,
         textAlign: 'center',
     },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     buttonText: {
         fontFamily: 'Gruesome',
         fontSize: 24,
-        color: 'white',
+        color: '#cabdb7',
     },
     waitingContainer: {
         backgroundColor: '#333',

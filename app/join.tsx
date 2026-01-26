@@ -96,7 +96,7 @@ export default function Join() {
         <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
             </Pressable>
 
             <Text style={[styles.Text, { marginBottom: 0, fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     Text: {
-        color: "white",
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
     },
     cardContainer: {

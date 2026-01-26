@@ -151,7 +151,7 @@ export default function Night() {
     const roleDisplay = getRoleDisplay();
 
     // Timer warning color (red when < 10 seconds)
-    const timerColor = timeRemaining < 10 ? '#FF4444' : 'white';
+    const timerColor = timeRemaining < 10 ? '#FF4444' : '#cabdb7';
 
     // Split players into columns for display
     const displayPlayers = players; // Show all players
@@ -179,8 +179,8 @@ export default function Night() {
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Leave game">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave game</Text>
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Leave game</Text>
             </Pressable>
 
             <View>
@@ -196,7 +196,7 @@ export default function Night() {
 
                 {/* Voting Area */}
                 <View style={styles.cardContainer}>
-                    <Text style={{ fontFamily: 'Gruesome', fontSize: 21, color: 'white', marginTop: 0, alignSelf: 'center' }}>
+                    <Text style={{ fontFamily: 'Gruesome', fontSize: 21, color: '#cabdb7', marginTop: 0, alignSelf: 'center' }}>
                         {getInstructionText()}
                     </Text>
 
@@ -249,7 +249,7 @@ export default function Night() {
                                                                 isDead && styles.deadText,
                                                             ]}>
                                                                 {p.name}
-                                                                {p.isHost && ' (Host)'}
+
                                                                 {isMe && ' (You)'}
                                                                 {isDead && ' ☠️'}
                                                             </Text>
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     Text: {
-        color: "white",
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
     },
     cardContainer: {
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     playerText: {
-        color: 'white',
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
         fontSize: 18,
         textAlign: 'center',
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         textAlign: 'center',
-        color: 'white',
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
         zIndex: 20,
     },

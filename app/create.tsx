@@ -174,7 +174,7 @@ export default function Create() {
     <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
       <StatusBar hidden={true} />
       <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-        <MaterialIcons name="arrow-back" size={30} color="white" />
+        <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
       </Pressable>
 
       <Text style={{ fontFamily: 'Gruesome', fontSize: 40, color: 'white', marginBottom: 0, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }}>Maphia</Text>

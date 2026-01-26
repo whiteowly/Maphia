@@ -7,7 +7,7 @@ const backgroundImage = require("../assets/images/background.jpeg");
 
 export default function Login() {
     const handleShare = () => {
-       router.push('/lobby');
+        router.push('/lobby');
     };
     const router = useRouter();
     const [text, onChangeText] = React.useState('email...');
@@ -17,20 +17,20 @@ export default function Login() {
         <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
             <StatusBar hidden={true} />
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
             </Pressable>
 
-            <Text style={[styles.Text, { marginBottom: 0,fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
+            <Text style={[styles.Text, { marginBottom: 0, fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
 
             <View style={styles.cardContainer} >
-                <Text style={[styles.Text, {  fontSize: 30,  marginTop: 4, alignSelf: 'center' }]}>Login</Text>
+                <Text style={[styles.Text, { fontSize: 30, marginTop: 4, alignSelf: 'center' }]}>Login</Text>
                 <TextInput
                     style={styles.input}
-                    
+
                     onChangeText={onChangeText}
                     placeholder={text}
                 />
-                 <TextInput
+                <TextInput
                     style={styles.input}
                     placeholder={password}
                     onChangeText={onChangePassword}
@@ -43,9 +43,9 @@ export default function Login() {
                     onPress={handleShare}
                     activeOpacity={1}
                 >
-                    <Text style={[styles.Text, {  fontSize: 25 }]}>Login</Text>
+                    <Text style={[styles.Text, { fontSize: 25 }]}>Login</Text>
                 </TouchableOpacity>
-                 
+
             </View>
         </ImageBackground>
     );
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     Text: {
-        color: "white",
+        color: "#cabdb7",
         fontFamily: 'Gruesome',
     },
     cardContainer: {
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
         margin: 10,
         marginLeft: 200,
         marginRight: 200,
-        backgroundColor: '#22010180', 
+        backgroundColor: '#22010180',
         shadowColor: '#250101ff',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,

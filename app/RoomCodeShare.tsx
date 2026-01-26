@@ -15,7 +15,7 @@ const RoomCodeShare: React.FC<RoomCodeShareProps> = ({ code }) => {
 
   return (
     <View style={styles.container}>
-      
+
       {/* 1. CODE DISPLAY AREA */}
       <View style={styles.codeDisplay}>
         <Text style={styles.codeText}>{code}</Text>
@@ -37,13 +37,13 @@ const RoomCodeShare: React.FC<RoomCodeShareProps> = ({ code }) => {
 const styles = StyleSheet.create({
   container: {
     // Lays items horizontally and stretches to fill its parent
-    flexDirection: 'row', 
+    flexDirection: 'row',
     alignItems: 'center',
     width: 180, // Fixed width for simplicity
     height: 35,
     borderRadius: 8,
     // Base dark color for the container
-    backgroundColor: 'rgba(50, 0, 0, 0.4)', 
+    backgroundColor: 'rgba(50, 0, 0, 0.4)',
     overflow: 'hidden',
     borderColor: 'rgba(255, 0, 0, 0.2)', // Light red border around the whole element
     borderWidth: 1,
@@ -78,14 +78,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
 
     // SHADOW/GLOW EFFECT (Crucial for the image's look)
-    shadowColor: '#FF0000', 
+    shadowColor: '#FF0000',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1, 
-    shadowRadius: 10, 
+    shadowOpacity: 1,
+    shadowRadius: 10,
     elevation: 10, // Android shadow effect
   },
   shareText: {
-    color: 'white', 
+    color: '#cabdb7',
     fontSize: 16,
     fontWeight: '600',
     fontFamily: 'Gruesome',

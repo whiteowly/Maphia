@@ -100,8 +100,8 @@ export default function VotingResults() {
                 <StatusBar hidden={true} />
 
                 <Pressable onPress={handleQuit} style={styles.backButton} accessibilityLabel="Leave game">
-                    <MaterialIcons name="arrow-back" size={30} color="white" />
-                    <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave</Text>
+                    <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
+                    <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Leave</Text>
                 </Pressable>
 
                 <View style={styles.container}>
@@ -123,12 +123,12 @@ export default function VotingResults() {
 
     // Voting result display
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground source={backgroundImage} blurRadius={10} style={styles.background}>
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleQuit} style={styles.backButton} accessibilityLabel="Leave game">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Quit</Text>
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Quit</Text>
             </Pressable>
 
             <View style={styles.container}>
@@ -137,13 +137,12 @@ export default function VotingResults() {
                 <View style={styles.resultCard}>
                     {tie ? (
                         <>
-                            <Text style={styles.tieIcon}>⚖️</Text>
                             <Text style={styles.tieText}>It's a Tie!</Text>
                             <Text style={styles.subText}>No one was eliminated</Text>
                         </>
                     ) : eliminated ? (
                         <>
-                            <Text style={styles.eliminatedIcon}>☠️</Text>
+
                             <Text style={styles.eliminatedText}>{eliminatedName}</Text>
                             <Text style={styles.wasText}>was eliminated!</Text>
                             <Text style={[styles.roleReveal, { color: getRoleColor(eliminatedRole) }]}>
@@ -152,7 +151,7 @@ export default function VotingResults() {
                         </>
                     ) : (
                         <>
-                            <Text style={styles.tieIcon}>🤷</Text>
+
                             <Text style={styles.tieText}>No Votes Cast</Text>
                             <Text style={styles.subText}>No one was eliminated</Text>
                         </>
@@ -171,6 +170,7 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         resizeMode: "cover",
+
     },
     container: {
         flex: 1,
@@ -185,12 +185,10 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     resultCard: {
-        backgroundColor: 'rgba(31, 41, 55, 0.9)',
+        backgroundColor: '#22010180',
         padding: 50,
         borderRadius: 20,
         alignItems: 'center',
-        minWidth: 350,
-        borderWidth: 2,
         borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     eliminatedIcon: {
@@ -234,7 +232,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Gruesome',
         fontSize: 16,
         color: '#6B7280',
-        marginTop: 40,
+        marginTop: 20,
     },
     gameOverText: {
         fontFamily: 'Gruesome',

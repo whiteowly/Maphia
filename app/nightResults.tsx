@@ -55,16 +55,16 @@ const NightResultsScreen = () => {
 
         if (results.guardianMistake) {
             return {
-                icon: '💔',
+
                 title: 'The Guardian Angel made a mistake!',
-                subtitle: 'They tried to protect the wrong person and died.',
+                subtitle: 'They tried to protect the wrong person and died!',
                 color: '#EF4444'
             };
         }
 
         if (results.saved) {
             return {
-                icon: '✨',
+
                 title: `The Guardian Angel saved someone!`,
                 subtitle: 'The Maphia\'s attack was blocked!',
                 color: '#3B82F6'
@@ -73,18 +73,18 @@ const NightResultsScreen = () => {
 
         if (results.killed) {
             return {
-                icon: '☠️',
+
                 title: `${results.killedName} was killed!`,
-                subtitle: 'The Maphia struck...',
+                subtitle: 'The Maphia struck!',
                 color: '#EF4444'
             };
         }
 
         return {
-            icon: '😮',
+
             title: 'No one died tonight',
             subtitle: 'Everyone is safe... for now.',
-            color: '#9CA3AF'
+            color: '#cabdb7'
         };
     };
 
@@ -95,7 +95,7 @@ const NightResultsScreen = () => {
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleQuit} style={styles.backButton}>
-                <MaterialIcons name="arrow-back" size={30} color="white" />
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
                 <Text style={styles.backText}>Quit</Text>
             </Pressable>
 
@@ -103,7 +103,6 @@ const NightResultsScreen = () => {
                 <Text style={styles.phase}>Night Results</Text>
 
                 <View style={styles.resultsCard}>
-                    <Text style={styles.icon}>{message.icon}</Text>
                     <Text style={[styles.title, { color: message.color || '#D1D5DB' }]}>
                         {message.title}
                     </Text>
@@ -111,12 +110,8 @@ const NightResultsScreen = () => {
                         <Text style={styles.subtitle}>{message.subtitle}</Text>
                     )}
 
-                    {/* Bug 3: Show who the mafia targeted */}
-                    {results?.targetedName && !results?.guardianMistake && (
-                        <Text style={styles.targetInfo}>
-                            🎯 Maphia targeted: {results.targetedName}
-                        </Text>
-                    )}
+
+
 
 
                 </View>
@@ -147,7 +142,7 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     resultsCard: {
-        backgroundColor: 'rgba(31, 41, 55, 0.9)',
+        backgroundColor: '#22010180',
         padding: 40,
         borderRadius: 20,
         alignItems: 'center',
@@ -190,7 +185,7 @@ const styles = StyleSheet.create({
     backText: {
         fontFamily: 'Gruesome',
         fontSize: 20,
-        color: 'white',
+        color: '#cabdb7',
         marginLeft: 10,
     },
     targetInfo: {

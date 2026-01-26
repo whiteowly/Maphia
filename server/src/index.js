@@ -53,7 +53,6 @@ class GameRoom {
             isReady: isHost, // Host is automatically ready
             isDead: false,
             role: null,
-            isMuted: false,
         });
 
         return { success: true };
@@ -246,7 +245,6 @@ class GameRoom {
                 isHost: player.isHost,
                 isReady: player.isReady,
                 isDead: player.isDead,
-                isMuted: player.isMuted,
                 // Don't expose role to everyone
             });
         }
@@ -289,7 +287,6 @@ class GameRoom {
             player.isDead = false;
             player.role = null;
             player.isReady = player.id === this.hostId; // Host stays ready
-            player.isMuted = false;
         }
     }
 }
@@ -567,24 +564,6 @@ io.on('connection', (socket) => {
 
         // Bug 4 Fix: Check if night is complete (both Maphia and Guardian voted)
         checkNightComplete(room);
-    });
-
-    // Toggle mute
-    socket.on('toggle_mute', (data) => {
-        const { isMuted } = data;
-        const room = rooms.get(currentRoom);
-
-        if (!room) return;
-
-        const player = room.players.get(playerId);
-        if (player) {
-            player.isMuted = isMuted;
-        }
-
-        io.to(currentRoom).emit('room_update', {
-            state: room.getState(),
-            players: room.getPublicPlayerList(),
-        });
     });
 
     // Handle disconnect

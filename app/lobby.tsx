@@ -177,7 +177,7 @@ export default function Lobby() {
 
             {/* Back Button */}
             <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Go back">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
                 <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Leave Lobby</Text>
             </Pressable>
 

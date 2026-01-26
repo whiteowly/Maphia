@@ -1,7 +1,7 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { useGame } from './context/GameContext';
 import socketService, { Player } from './services/socketService';
 import { formatCountdown } from './types/game';
@@ -14,7 +14,6 @@ export default function Game() {
 
     // State from socket
     const [timeRemaining, setTimeRemaining] = useState(settings.discussionTimeSeconds || 60);
-    const [isMuted, setIsMuted] = useState(false);
 
     // Set up socket listeners
     useEffect(() => {
@@ -51,12 +50,6 @@ export default function Game() {
     // Count alive and dead players
     const alivePlayers = players.filter(p => !p.isDead);
     const deadPlayers = players.filter(p => p.isDead);
-
-    const handleMute = () => {
-        const newMuted = !isMuted;
-        setIsMuted(newMuted);
-        socketService.toggleMute(newMuted);
-    };
 
     const handleLeave = () => {
         Alert.alert(
@@ -96,12 +89,11 @@ export default function Game() {
     const roleDisplay = getRoleDisplay();
 
     // Timer warning color (red when < 15 seconds)
-    const timerColor = timeRemaining < 15 ? '#FF4444' : 'white';
+    const timerColor = timeRemaining < 15 ? '#FF4444' : '#cabdb7';
 
     // Get player icon based on status
     const getPlayerIcon = (player: Player) => {
         if (player.isDead) return null;
-        if (player.isMuted) return { type: 'ion', name: 'volume-mute' };
         return { type: 'ion', name: 'volume-high' };
     };
 
@@ -110,8 +102,8 @@ export default function Game() {
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Leave game">
-                <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave game</Text>
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Leave game</Text>
             </Pressable>
 
             <View>
@@ -130,11 +122,10 @@ export default function Game() {
                     <View style={styles.playersColumnsRow}>
                         <View style={styles.playerColumn}>
                             {leftPlayers.map((p) => {
-                                const icon = getPlayerIcon(p);
                                 const isMe = p.id === myPlayerId;
                                 return (
                                     <View key={p.id} style={[styles.playerRow, p.isDead && styles.deadPlayer]}>
-                                        {isMe && <Text style={styles.meIndicator}>→</Text>}
+                                        {isMe && <Text style={styles.meIndicator}></Text>}
                                         <Text style={[
                                             styles.playerText,
                                             p.isDead && styles.deadText,
@@ -143,9 +134,6 @@ export default function Game() {
                                             {p.name}
                                             {p.isDead && ' ☠️'}
                                         </Text>
-                                        {icon?.type === 'ion' && !p.isDead && (
-                                            <Ionicons name={icon.name as any} size={18} color={p.isMuted ? 'gray' : 'white'} style={styles.iconAfter} />
-                                        )}
                                     </View>
                                 );
                             })}
@@ -153,11 +141,10 @@ export default function Game() {
 
                         <View style={styles.playerColumn}>
                             {rightPlayers.map((p) => {
-                                const icon = getPlayerIcon(p);
                                 const isMe = p.id === myPlayerId;
                                 return (
                                     <View key={p.id} style={[styles.playerRow, p.isDead && styles.deadPlayer]}>
-                                        {isMe && <Text style={styles.meIndicator}>→</Text>}
+                                        {isMe && <Text style={styles.meIndicator}></Text>}
                                         <Text style={[
                                             styles.playerText,
                                             p.isDead && styles.deadText,
@@ -166,9 +153,6 @@ export default function Game() {
                                             {p.name}
                                             {p.isDead && ' ☠️'}
                                         </Text>
-                                        {icon?.type === 'ion' && !p.isDead && (
-                                            <Ionicons name={icon.name as any} size={18} color={p.isMuted ? 'gray' : 'white'} style={styles.iconAfter} />
-                                        )}
                                     </View>
                                 );
                             })}
@@ -182,18 +166,6 @@ export default function Game() {
                 <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
                     {alivePlayers.length} alive • {deadPlayers.length} dead
                 </Text>
-
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity
-                        style={[styles.muteButton, isMuted && styles.mutedButton]}
-                        onPress={handleMute}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={[styles.Text, { fontSize: 20 }]}>
-                            {isMuted ? '🔇 Muted' : '🔊 Mute'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
             </View>
         </ImageBackground>
     );
@@ -205,7 +177,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     Text: {
-        color: "white",
+        color: "#cabdb7",
         fontFamily: 'Gruesome',
     },
     cardContainer: {
@@ -223,24 +195,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-    },
-    muteButton: {
-        width: 120,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#610000ff',
-        borderRadius: 100,
-        marginTop: 10,
-        marginRight: 10,
-        shadowColor: '#640303ff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 1,
-        shadowRadius: 10,
-        elevation: 10,
-    },
-    mutedButton: {
-        backgroundColor: '#444444',
     },
     buttonRow: {
         flexDirection: 'row',
@@ -292,7 +246,7 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     playerText: {
-        color: 'white',
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
         fontSize: 20,
         marginTop: 0,
@@ -318,7 +272,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         textAlign: 'center',
-        color: 'white',
+        color: '#cabdb7',
         fontFamily: 'Gruesome',
         zIndex: 20,
     },

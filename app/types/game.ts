@@ -7,7 +7,6 @@ export interface Player {
     isReady: boolean;
     isDead: boolean;
     role?: 'maphia' | 'civilian' | 'guardian' | 'joker';
-    isMuted: boolean;
 }
 
 export interface GameSettings {

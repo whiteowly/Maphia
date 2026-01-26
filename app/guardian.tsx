@@ -76,7 +76,7 @@ const Guardian = () => {
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleQuit} style={styles.backButton}>
-                <MaterialIcons name="arrow-back" size={30} color="white" />
+                <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
                 <Text style={styles.backText}>Quit</Text>
             </Pressable>
 
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     playerName: {
         fontFamily: 'Gruesome',
         fontSize: 20,
-        color: 'white',
+        color: '#cabdb7',
     },
     saveButton: {
         backgroundColor: '#1E40AF',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     saveText: {
         fontFamily: 'Gruesome',
         fontSize: 24,
-        color: 'white',
+        color: '#cabdb7',
     },
     savedContainer: {
         alignItems: 'center',
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     backText: {
         fontFamily: 'Gruesome',
         fontSize: 20,
-        color: 'white',
+        color: '#cabdb7',
         marginLeft: 10,
     },
 });

@@ -14,7 +14,6 @@ export interface Player {
     isHost: boolean;
     isReady: boolean;
     isDead: boolean;
-    isMuted: boolean;
 }
 
 export interface GameSettings {
@@ -244,11 +243,6 @@ class SocketService {
         }
 
         this.socket.emit('submit_guardian_save', { targetId }, callback);
-    }
-
-    // Toggle mute
-    toggleMute(isMuted: boolean): void {
-        this.socket?.emit('toggle_mute', { isMuted });
     }
 
     // Subscribe to events

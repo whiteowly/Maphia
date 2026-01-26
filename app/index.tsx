@@ -34,8 +34,8 @@ export default function Index() {
 
       {(!isPlaying || showPlayButton) && (
         <TouchableOpacity onPress={handleManualPlay} style={{ position: 'absolute', top: 40, right: 20, zIndex: 10 }}>
-          <MaterialIcons name="volume-off" size={40} color="white" />
-          <Text style={{ fontFamily: 'Gruesome', color: 'white', fontSize: 12 }}>Tap to Play</Text>
+          <MaterialIcons name="volume-off" size={40} color="#cabdb7" />
+          <Text style={{ fontFamily: 'Gruesome', color: '#cabdb7', fontSize: 12 }}>Tap to Play</Text>
         </TouchableOpacity>
       )}
 
