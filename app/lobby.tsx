@@ -178,17 +178,17 @@ export default function Lobby() {
             {/* Back Button */}
             <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Go back">
                 <MaterialIcons name="arrow-back" size={30} color="white" />
-                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: 'white', marginLeft: 10 }}>Leave Lobby</Text>
+                <Text style={{ fontFamily: 'Gruesome', fontSize: 20, color: '#cabdb7', marginLeft: 10 }}>Leave Lobby</Text>
             </Pressable>
 
             {/* Title */}
-            <Text style={[styles.Text, { marginBottom: 0, fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
+            <Text style={[{ marginBottom: 0, color: 'white', fontFamily: 'Gruesome', fontSize: 40, marginLeft: 30, marginTop: 30, alignSelf: 'flex-end', textAlign: 'right', marginRight: 30 }]}>Maphia</Text>
 
             {/* Main Content */}
             <View style={styles.mainContent}>
                 {/* Players List Card */}
                 <View style={styles.cardContainer1}>
-                    <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: 'white', marginTop: 5, alignSelf: 'flex-start' }}>
+                    <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: '#cabdb7', marginTop: 5, alignSelf: 'flex-start' }}>
                         Players ({players.length}/{maxPlayers})
                     </Text>
                     <ScrollView style={styles.playersList} showsVerticalScrollIndicator={true}>
@@ -198,7 +198,7 @@ export default function Lobby() {
                                     <Text style={{
                                         fontFamily: 'Gruesome',
                                         fontSize: 20,
-                                        color: player.id === myPlayerId ? '#FFD700' : 'white',
+                                        color: player.id === myPlayerId ? '#FFD700' : '#cabdb7',
                                         marginLeft: 10,
                                         marginTop: 5
                                     }}>
@@ -230,7 +230,7 @@ export default function Lobby() {
 
                 {/* Game Settings Card */}
                 <View style={styles.settingsCard}>
-                    <Text style={{ fontFamily: 'Gruesome', fontSize: 24, color: 'white', marginBottom: 10 }}>Game Settings</Text>
+                    <Text style={{ fontFamily: 'Gruesome', fontSize: 24, color: '#cabdb7', marginBottom: 10 }}>Game Settings</Text>
                     <Text style={{ fontFamily: 'Gruesome', fontSize: 16, color: '#AAAAAA' }}>
                         Players: {maxPlayers}
                     </Text>
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     Text: {
-        color: "white",
+        color: "#cabdb7",
         fontFamily: 'Gruesome',
     },
     mainContent: {
@@ -370,11 +370,11 @@ const styles = StyleSheet.create({
         height: 40,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#4a0080',
+        backgroundColor: '#640303ff',
         borderRadius: 100,
         marginTop: 5,
         marginRight: 20,
-        shadowColor: '#4a0080',
+        shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,
         shadowRadius: 8,

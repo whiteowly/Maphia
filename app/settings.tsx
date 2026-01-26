@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Linking, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Linking, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import { useMusic } from './context/MusicContext';
 
@@ -21,6 +22,7 @@ export default function Settings() {
     const router = useRouter();
     const { playerName, setPlayerName } = useGame();
     const { setVolume } = useMusic();
+    const { showAlert } = useAlert();
 
     // State for all settings
     const [inputName, setInputName] = useState(playerName || '');
@@ -77,15 +79,15 @@ export default function Settings() {
     const handleSave = async () => {
         const trimmedName = inputName.trim();
         if (!trimmedName) {
-            Alert.alert('Error', 'Please enter a name');
+            showAlert('Error', 'Please enter a name');
             return;
         }
         if (trimmedName.length < 2) {
-            Alert.alert('Error', 'Name must be at least 2 characters');
+            showAlert('Error', 'Name must be at least 2 characters');
             return;
         }
         if (trimmedName.length > 15) {
-            Alert.alert('Error', 'Name must be 15 characters or less');
+            showAlert('Error', 'Name must be 15 characters or less');
             return;
         }
 
@@ -99,19 +101,19 @@ export default function Settings() {
             setPlayerName(trimmedName);
             setHasChanges(false);
 
-            Alert.alert('Saved!', 'Your settings have been saved', [
+            showAlert('Saved!', 'Your settings have been saved', [
                 { text: 'OK', onPress: () => router.back() }
             ]);
         } catch (e) {
             console.error('Failed to save settings:', e);
-            Alert.alert('Error', 'Failed to save settings');
+            showAlert('Error', 'Failed to save settings');
         }
     };
 
     const openLink = (url: string) => {
         Linking.openURL(url).catch(err => {
             console.error('Failed to open URL:', err);
-            Alert.alert('Error', 'Could not open link');
+            showAlert('Error', 'Could not open link');
         });
     };
 
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12, // reduce padding
         paddingHorizontal: 30,
         alignItems: 'center',
-        shadowColor: '#FF0000',
+
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.5,
         shadowRadius: 10,

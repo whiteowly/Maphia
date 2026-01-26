@@ -76,14 +76,7 @@ const RoleRevealJoker = () => {
                     You are the Joker!
                 </Animated.Text>
 
-                <Text style={styles.roleDescription}>
-                    Your goal: Get voted out! You have ONE save from night kills.
-                </Text>
-                <Text style={styles.roleHint}>
-                    • Act suspicious to get voted out{'\n'}
-                    • You win if you get voted out by players{'\n'}
-                    • You have a one-time save from Maphia kills
-                </Text>
+
 
                 <TouchableOpacity
                     style={[styles.continueButton, !canContinue && styles.disabledButton]}

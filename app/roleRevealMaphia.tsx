@@ -106,14 +106,7 @@ const RoleRevealMaphia = () => {
                     </View>
                 )}
 
-                <Text style={styles.roleDescription}>
-                    Eliminate civilians without getting caught!
-                </Text>
-                <Text style={styles.roleHint}>
-                    • Blend in during discussions{'\n'}
-                    • Coordinate with other Maphias{'\n'}
-                    • Eliminate civilians to win!
-                </Text>
+
 
                 <TouchableOpacity
                     style={[styles.continueButton, !canContinue && styles.disabledButton]}

@@ -80,16 +80,6 @@ const RoleRevealCiv = () => {
                 <Animated.Text style={[styles.roleText, { opacity: fadeAnim, color: '#7BFF7B' }]}>
                     You are a Civilian!
                 </Animated.Text>
-
-                <Text style={styles.roleDescription}>
-                    Find and eliminate the Maphias before they eliminate you!
-                </Text>
-                <Text style={styles.roleHint}>
-                    • Discuss with other players to find suspects{'\n'}
-                    • Vote during voting phase to eliminate suspects{'\n'}
-                    • Stay alive to win!
-                </Text>
-
                 <TouchableOpacity
                     style={[styles.continueButton, !canContinue && styles.disabledButton]}
                     onPress={handleContinue}
@@ -135,7 +125,7 @@ const styles = StyleSheet.create({
     roleText: {
         fontFamily: 'Gruesome',
         fontSize: 36,
-        marginTop: 20,
+        marginTop: 10,
         textShadowColor: 'rgba(0, 255, 0, 0.5)',
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 15,

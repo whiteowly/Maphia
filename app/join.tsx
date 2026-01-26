@@ -1,31 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ImageBackground, Platform, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import socketService from './services/socketService';
-
-// Web-compatible alert helper
-const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
-    if (Platform.OS === 'web') {
-        if (buttons && buttons.length > 0) {
-            const confirmed = window.confirm(`${title}\n\n${message}`);
-            if (confirmed && buttons[0]?.onPress) {
-                buttons[0].onPress();
-            }
-        } else {
-            window.alert(`${title}\n\n${message}`);
-        }
-    } else {
-        Alert.alert(title, message, buttons);
-    }
-};
 
 const backgroundImage = require("../assets/images/background.png");
 
 export default function Join() {
     const router = useRouter();
     const { updateSettings, setIsHost, setMyPlayerId, playerName: savedName } = useGame();
+    const { showAlert } = useAlert();
 
     const [roomCode, setRoomCode] = useState('');
     const [playerName, setPlayerName] = useState(savedName || '');

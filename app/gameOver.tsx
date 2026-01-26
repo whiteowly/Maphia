@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Animated, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -7,8 +6,10 @@ import { useMusic } from './context/MusicContext';
 import socketService from './services/socketService';
 
 const backgroundImage = require("../assets/images/lobby.png");
-const jokerCard = require("../assets/images/jokerCard.png");
-const maphiaCard = require("../assets/images/roles/EmptyMaphia.png");
+const jokerCard = require("../assets/images/joker.png");
+const maphiaCard = require("../assets/images/maphiaCard.png");
+const guardianCard = require("../assets/images/GuardianAngel.png");
+const civilianCard = require("../assets/images/roleCiv.png");
 
 interface WinnerPlayer {
     id: string;
@@ -113,39 +114,29 @@ export default function GameOver() {
             <Animated.View style={[styles.cardWrapper, { opacity: fadeAnim }]}>
                 <View>
                     <Image source={jokerCard} style={styles.card} resizeMode="contain" />
-                    <View style={styles.nameOverlay}>
+                    {/* <View style={styles.nameOverlay}>
                         <Text style={styles.cardNameText}>{winningPlayers[0]?.name || 'Joker'}</Text>
-                    </View>
+                    </View> */}
                 </View>
             </Animated.View>
-            <Text style={styles.winTitle}>🃏 JOKER WINS! 🃏</Text>
-            <Text style={styles.winSubtitle}>Successfully got voted out!</Text>
+            <Text style={styles.winTitle}>JOKER WINS!</Text>
+
         </View>
     );
 
     // Render Maphia Win
     const renderMaphiaWin = () => (
-        <View style={styles.maphiaContainer}>
-            <Text style={styles.winTitle}>🔪 MAPHIA WINS! 🔪</Text>
-            <View style={styles.cardsRow}>
-                {winningPlayers.map((player, index) => (
-                    <Animated.View
-                        key={player.id}
-                        style={[styles.cardWrapper, { opacity: fadeAnim }]}
-                    >
-                        <View>
-                            <Image source={maphiaCard} style={styles.maphiaCardImage} resizeMode="contain" />
-                            <View style={styles.nameOverlay}>
-                                <Text style={styles.maphiaCardNameText}>
-                                    {player.name}
-                                    {player.isDead && ' ☠️'}
-                                </Text>
-                            </View>
-                        </View>
-                    </Animated.View>
-                ))}
-            </View>
-            <Text style={styles.winSubtitle}>The town has been eliminated!</Text>
+        <View style={styles.jokerContainer}>
+            <Animated.View style={[styles.cardWrapper, { opacity: fadeAnim }]}>
+                <View>
+                    <Image source={maphiaCard} style={styles.card} resizeMode="contain" />
+                    {/* <View style={styles.nameOverlay}>
+                        <Text style={styles.cardNameText}>{winningPlayers[0]?.name || 'Joker'}</Text>
+                    </View> */}
+                </View>
+            </Animated.View>
+            <Text style={styles.winTitle}>MAPHIAS WIN!</Text>
+
         </View>
     );
 
@@ -154,45 +145,18 @@ export default function GameOver() {
         const civilianPlayers = winningPlayers;
 
         return (
-            <View style={styles.civilianContainer}>
-                <Text style={styles.civilianWinTitle}>✨ CIVILIANS WIN! ✨</Text>
-                <Text style={styles.winSubtitle}>The Maphia has been eliminated!</Text>
+            <View style={styles.jokerContainer}>
+                <Animated.View style={[styles.cardWrapper, { opacity: fadeAnim }]}>
+                    <View>
+                        <Image source={civilianCard} style={styles.card} resizeMode="contain" />
 
-                <View style={styles.namesScatter}>
-                    {civilianPlayers.map((player, index) => {
-                        const isGuardian = player.role === 'guardian';
-                        // Use modulo to pick position style
-                        const posIndex = index % 8;
+                        {/* <View style={styles.nameOverlay}>
+                        <Text style={styles.cardNameText}>{winningPlayers[0]?.name || 'Joker'}</Text>
+                    </View> */}
+                    </View>
+                </Animated.View>
+                <Text style={styles.winTitle}>CIVILIANS WIN!</Text>
 
-                        return (
-                            <Animated.View
-                                key={player.id}
-                                style={[
-                                    styles.scatteredName,
-                                    posIndex === 0 && styles.pos0,
-                                    posIndex === 1 && styles.pos1,
-                                    posIndex === 2 && styles.pos2,
-                                    posIndex === 3 && styles.pos3,
-                                    posIndex === 4 && styles.pos4,
-                                    posIndex === 5 && styles.pos5,
-                                    posIndex === 6 && styles.pos6,
-                                    posIndex === 7 && styles.pos7,
-                                    { opacity: fadeAnim }
-                                ]}
-                            >
-                                {isGuardian && <Text style={styles.haloIcon}>😇</Text>}
-                                <Text style={[
-                                    styles.civilianName,
-                                    isGuardian && styles.guardianName,
-                                    player.isDead && styles.deadName
-                                ]}>
-                                    {player.name}
-                                    {player.isDead && ' ☠️'}
-                                </Text>
-                            </Animated.View>
-                        );
-                    })}
-                </View>
             </View>
         );
     };
@@ -215,20 +179,13 @@ export default function GameOver() {
     // Choose background based on winner
     const getBackgroundStyle = () => {
         if (gameData?.winner === 'civilians') {
-            return { backgroundColor: '#0a2e0a' }; // Dark green
+            return { backgroundColor: 'transparent' }; // Dark green
         }
         return {};
     };
 
     return (
-        <ImageBackground source={backgroundImage} style={[styles.background, getBackgroundStyle()]}>
-            {gameData?.winner === 'civilians' && (
-                <LinearGradient
-                    colors={['rgba(0, 100, 0, 0.3)', 'rgba(0, 50, 0, 0.5)', 'rgba(0, 100, 0, 0.3)']}
-                    style={StyleSheet.absoluteFill}
-                />
-            )}
-
+        <ImageBackground source={backgroundImage} style={[styles.background,]}>
             <View style={styles.container}>
                 {renderWinDisplay()}
 
@@ -283,7 +240,7 @@ const styles = StyleSheet.create({
     },
     card: {
         width: 180,
-        height: 280,
+        height: 230,
     },
     nameOverlay: {
         position: 'absolute',
@@ -304,7 +261,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Gruesome',
         fontSize: 40,
         color: 'white',
-        marginTop: 20,
+        marginTop: 0,
         textAlign: 'center',
     },
     winSubtitle: {
@@ -394,13 +351,13 @@ const styles = StyleSheet.create({
     // Buttons
     buttonContainer: {
         flexDirection: 'row',
-        marginTop: 30,
-        gap: 20,
+        marginTop: 10,
+        gap: 10,
     },
     playAgainButton: {
         backgroundColor: '#006100',
-        paddingHorizontal: 40,
-        paddingVertical: 15,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
         borderRadius: 50,
         shadowColor: '#00FF00',
         shadowOffset: { width: 0, height: 0 },
@@ -410,8 +367,8 @@ const styles = StyleSheet.create({
     },
     quitButton: {
         backgroundColor: '#610000',
-        paddingHorizontal: 40,
-        paddingVertical: 15,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
         borderRadius: 50,
         shadowColor: '#FF0000',
         shadowOffset: { width: 0, height: 0 },

@@ -76,14 +76,7 @@ const RoleRevealGuardian = () => {
                     You are the Guardian Angel!
                 </Animated.Text>
 
-                <Text style={styles.roleDescription}>
-                    Save one player each night (not yourself). If you save a Maphia, you die!
-                </Text>
-                <Text style={styles.roleHint}>
-                    • Choose wisely who to protect each night{'\n'}
-                    • You cannot save yourself{'\n'}
-                    • Saving a Maphia will kill you!
-                </Text>
+
 
                 <TouchableOpacity
                     style={[styles.continueButton, !canContinue && styles.disabledButton]}
