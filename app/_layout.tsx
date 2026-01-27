@@ -2,8 +2,9 @@ import { fontFamily } from '@/dimensions/fontFamily';
 import { useFonts } from 'expo-font';
 import { Stack } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import '../global.css';
+import VideoSplash from './components/VideoSplash';
 import { AlertProvider } from './context/AlertContext';
 import { GameProvider } from './context/GameContext';
 import { MusicProvider } from './context/MusicContext';
@@ -16,6 +17,8 @@ export default function RootLayout() {
     [fontFamily.Gruesome]: require('../assets/fonts/Gruesome.ttf'),
   });
 
+  const [isVideoFinished, setIsVideoFinished] = useState(false);
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -25,6 +28,11 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return null;
   }
+
+  if (!isVideoFinished) {
+    return <VideoSplash onFinish={() => setIsVideoFinished(true)} />;
+  }
+
   return (
     <AlertProvider>
       <MusicProvider>

@@ -1031,24 +1031,41 @@ io.on('connection', (socket) => {
         // Remove player from room
         room.removePlayer(playerId);
 
-        if (wasHost) {
-            // Host left - notify all players and close room
-            io.to(room.roomCode).emit('host_left');
-            rooms.delete(currentRoom);
+        if (wasHost && room.players.size > 0) {
+            // Host left, but players remain - Host migration happened in room.removePlayer()
+            console.log(`Host left. New host assigned: ${room.hostId} for room ${room.roomCode}`);
+
+            // Notify everyone about player leaving AND new host
+            io.to(room.roomCode).emit('player_left', {
+                playerId: playerId,
+                name: playerName,
+                newHostId: room.hostId
+            });
+
+            // Send full room update
+            io.to(room.roomCode).emit('room_update', {
+                state: room.getState(),
+                players: room.getPublicPlayerList(),
+            });
+
+            // Special event if we need to trigger specific UI changes for the new host
+            io.to(room.hostId).emit('you_are_host');
+
         } else if (room.players.size === 0) {
             // No players left - delete room
             rooms.delete(currentRoom);
+            console.log(`Room deleted: ${currentRoom}`);
         } else {
-            // Notify remaining players
+            // Normal player left
+            io.to(room.roomCode).emit('player_left', {
+                playerId: playerId,
+                name: playerName,
+                newHostId: room.hostId,
+            });
+
             io.to(room.roomCode).emit('room_update', {
-                roomCode: room.roomCode,
-                players: Array.from(room.players.values()).map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    isHost: p.id === room.hostId,
-                })),
-                settings: room.settings,
-                phase: room.phase,
+                state: room.getState(),
+                players: room.getPublicPlayerList(),
             });
         }
     });
@@ -1078,6 +1095,18 @@ app.get('/rooms', (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🎮 Maphia Server running on port ${PORT}`);
+
+    // Log local network IP
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            if (net.family === 'IPv4' && !net.internal) {
+                console.log(`👉 On Network: http://${net.address}:${PORT}`);
+            }
+        }
+    }
 });

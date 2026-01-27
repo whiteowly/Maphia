@@ -25,7 +25,7 @@ interface GameOverData {
 
 export default function GameOver() {
     const router = useRouter();
-    const { isHost, resetGame } = useGame();
+    const { isHost, setIsHost, myPlayerId, resetGame } = useGame();
     const { startMusic } = useMusic();
 
     const [gameData, setGameData] = useState<GameOverData | null>(null);
@@ -53,11 +53,22 @@ export default function GameOver() {
             router.replace('/lobby' as any);
         });
 
-        // Listen for host leaving
-        const unsubHostLeft = socketService.on('host_left', () => {
-            Alert.alert('Host Left', 'The host has left the room.', [
-                { text: 'OK', onPress: () => handleQuit() }
-            ]);
+        // Listen for room updates (to check if I became host)
+        const unsubRoomUpdate = socketService.on('room_update', (data: any) => {
+            // Check if I became host
+            if (data.state.hostId === myPlayerId) {
+                setIsHost(true);
+                setWaitingForHost(false); // No longer waiting if I am host
+            } else {
+                setIsHost(false);
+            }
+        });
+
+        // Listen for explicit host assignment
+        const unsubYouAreHost = socketService.on('you_are_host', () => {
+            setIsHost(true);
+            setWaitingForHost(false);
+            Alert.alert('You represent the Host', 'The previous host left. You are now the host.');
         });
 
         // Listen for waiting state
@@ -67,7 +78,8 @@ export default function GameOver() {
 
         return () => {
             unsubPlayAgain();
-            unsubHostLeft();
+            unsubRoomUpdate();
+            unsubYouAreHost();
             unsubWaiting();
         };
     }, []);

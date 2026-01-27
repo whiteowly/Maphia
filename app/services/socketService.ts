@@ -1,9 +1,15 @@
 import { io, Socket } from 'socket.io-client';
 
-// Server URL from environment variable (set in .env)
-// For web testing: http://localhost:3001
-// For mobile/APK: https://maphia-5u6b.onrender.com
-export const SERVER_URL = 'http://192.168.1.3:3001';
+// Server URL configuration
+// __DEV__ is true when running locally in development mode
+const DEV_URL = process.env.EXPO_PUBLIC_DEV_API_URL || 'http://localhost:3001';
+const PROD_URL = process.env.EXPO_PUBLIC_PROD_API_URL || 'https://maphia-5u6b.onrender.com';
+
+// Automatically select URL based on environment
+export const SERVER_URL = __DEV__ ? DEV_URL : PROD_URL;
+
+// Debug log for checking connection URL
+console.log(`[SocketService] Connecting to: ${SERVER_URL} (DEV: ${__DEV__})`);
 
 // Event types
 export type GamePhase = 'lobby' | 'role_reveal' | 'night' | 'guardian' | 'discussion' | 'voting' | 'results' | 'game_over';

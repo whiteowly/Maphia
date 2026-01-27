@@ -12,7 +12,7 @@ const backgroundImage = require("../assets/images/lobby.png");
 
 export default function Lobby() {
     const router = useRouter();
-    const { settings, isHost, myPlayerId, setMyRole, setPhase, updateSettings, setMaphiaTeammates } = useGame();
+    const { settings, isHost, setIsHost, myPlayerId, setMyRole, setPhase, updateSettings, setMaphiaTeammates } = useGame();
     const { stopMusic } = useMusic();
 
     // State from socket
@@ -30,6 +30,27 @@ export default function Lobby() {
         const unsubRoomUpdate = socketService.on('room_update', (data: RoomUpdate) => {
             setPlayers(data.players);
             setRoomState(data.state);
+
+            // Update host status in context
+            if (data.state.hostId === myPlayerId) {
+                // If I am now the host (and wasn't before, or just confirming), update context
+                if (!isHost) { // Local check before context update to avoid loops if needed, though react handles it
+                    // Assuming setIsHost is available from useGame which it is
+                }
+                // Actually context update handles diff check usually, but good to be explicit
+            }
+            // Better yet, just sync it always:
+            // We need to access setIsHost from the closure or ref if it's not stable, but it comes from useGame. 
+            // However, listeners are defined in useEffect with [] dependency. 
+            // `myPlayerId` and `setIsHost` are from outside. 
+            // IMPORTANT: myPlayerId in the closure of useEffect might be stale if it changes (it shouldn't in lobby).
+            // But let's use the data from the event if possible, or ref.
+            // data.players contains { id, isHost }
+            const me = data.players.find(p => p.id === myPlayerId);
+            if (me) {
+                // Update context
+                setIsHost(me.isHost);
+            }
 
             // Update settings from server
             if (data.state.settings) {
