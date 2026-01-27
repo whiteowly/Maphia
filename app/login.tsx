@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const backgroundImage = require("../assets/images/background.jpeg");
+const backgroundImage = require("../assets/images/background.png");
 
 export default function Login() {
     const handleShare = () => {
