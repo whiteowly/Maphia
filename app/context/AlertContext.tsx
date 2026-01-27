@@ -1,8 +1,10 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import CustomAlert, { AlertButton } from '../../components/CustomAlert';
 
+export type AlertType = 'info' | 'warning' | 'error' | 'success' | 'blood';
+
 interface AlertContextType {
-    showAlert: (title: string, message: string, buttons?: AlertButton[]) => void;
+    showAlert: (title: string, message: string, buttons?: AlertButton[], type?: AlertType) => void;
     hideAlert: () => void;
 }
 
@@ -13,14 +15,16 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
     const [buttons, setButtons] = useState<AlertButton[]>([]);
+    const [type, setType] = useState<AlertType>('info');
 
     const hideAlert = useCallback(() => {
         setVisible(false);
     }, []);
 
-    const showAlert = useCallback((title: string, message: string, buttons?: AlertButton[]) => {
+    const showAlert = useCallback((title: string, message: string, buttons?: AlertButton[], alertType: AlertType = 'info') => {
         setTitle(title);
         setMessage(message);
+        setType(alertType);
 
         // Wrap button callbacks to also hide the alert
         const wrappedButtons = buttons?.map(btn => ({
@@ -44,6 +48,7 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                 message={message}
                 buttons={buttons}
                 onDismiss={hideAlert}
+                type={type}
             />
         </AlertContext.Provider>
     );

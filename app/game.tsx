@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import socketService, { Player } from './services/socketService';
 import { formatCountdown } from './types/game';
@@ -11,6 +12,7 @@ const backgroundImage = require("../assets/images/day_background.png");
 export default function Game() {
     const router = useRouter();
     const { settings, myRole, myPlayerId, setPhase, players, setPlayers } = useGame();
+    const { showAlert } = useAlert();
 
     // State from socket
     const [timeRemaining, setTimeRemaining] = useState(settings.discussionTimeSeconds || 60);
@@ -52,7 +54,7 @@ export default function Game() {
     const deadPlayers = players.filter(p => p.isDead);
 
     const handleLeave = () => {
-        Alert.alert(
+        showAlert(
             'Leave Game',
             'Are you sure you want to leave the game?',
             [
@@ -65,7 +67,8 @@ export default function Game() {
                         router.replace('/');
                     }
                 },
-            ]
+            ],
+            'blood'
         );
     };
 

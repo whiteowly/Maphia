@@ -1,7 +1,6 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { ImageBackground, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ImageBackground, StatusBar, StyleSheet, View } from "react-native";
 import { useMusic } from "./context/MusicContext";
 
 const backgroundImage = require("../assets/images/background.png");
@@ -10,7 +9,7 @@ export default function Index() {
   const { startMusic, isPlaying } = useMusic();
   const [showPlayButton, setShowPlayButton] = useState(false);
 
-  // Start music when home screen loads
+
   useEffect(() => {
     const play = async () => {
       try {
@@ -27,26 +26,15 @@ export default function Index() {
   const handleManualPlay = () => {
     startMusic().then(() => setShowPlayButton(false)).catch(() => { });
   };
-
   return (
     <ImageBackground source={backgroundImage} style={styles.background}>
       <StatusBar hidden={true} />
-
-      {(!isPlaying || showPlayButton) && (
-        <TouchableOpacity onPress={handleManualPlay} style={{ position: 'absolute', top: 40, right: 20, zIndex: 10 }}>
-          <MaterialIcons name="volume-off" size={40} color="#cabdb7" />
-          <Text style={{ fontFamily: 'Gruesome', color: '#cabdb7', fontSize: 12 }}>Tap to Play</Text>
-        </TouchableOpacity>
-      )}
-
       <View style={styles.container}>
-
         <Link href="/create" style={styles.link}>Host a Game</Link>
         <Link href="/join" style={styles.link}>Join</Link>
         <Link href="/settings" style={styles.link}>Settings</Link>
       </View>
     </ImageBackground>
-
   );
 }
 const styles = StyleSheet.create({
@@ -60,9 +48,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
-    padding: 20,
+    padding: 0,
     marginTop: 100,
-    marginLeft: 140
+    marginLeft: 140,
+    gap: 0
   },
   title: {
     fontFamily: 'Gruesome',
@@ -78,7 +67,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Gruesome',
     fontSize: 35,
     color: '#cabdb7',
-    marginVertical: 10,
+    marginVertical: 0,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,

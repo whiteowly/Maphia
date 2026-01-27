@@ -79,15 +79,15 @@ export default function Settings() {
     const handleSave = async () => {
         const trimmedName = inputName.trim();
         if (!trimmedName) {
-            showAlert('Error', 'Please enter a name');
+            showAlert('Error', 'Please enter a name', undefined, 'warning');
             return;
         }
         if (trimmedName.length < 2) {
-            showAlert('Error', 'Name must be at least 2 characters');
+            showAlert('Error', 'Name must be at least 2 characters', undefined, 'warning');
             return;
         }
         if (trimmedName.length > 15) {
-            showAlert('Error', 'Name must be 15 characters or less');
+            showAlert('Error', 'Name must be 15 characters or less', undefined, 'warning');
             return;
         }
 
@@ -103,10 +103,10 @@ export default function Settings() {
 
             showAlert('Saved!', 'Your settings have been saved', [
                 { text: 'OK', onPress: () => router.back() }
-            ]);
+            ], 'success');
         } catch (e) {
             console.error('Failed to save settings:', e);
-            showAlert('Error', 'Failed to save settings');
+            showAlert('Error', 'Failed to save settings', undefined, 'error');
         }
     };
 

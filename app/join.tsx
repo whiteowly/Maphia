@@ -46,7 +46,7 @@ export default function Join() {
     const handleJoin = async () => {
         // Validate inputs
         if (!roomCode.trim()) {
-            showAlert('Error', 'Please enter a room code');
+            showAlert('Error', 'Please enter a room code', undefined, 'warning');
             return;
         }
 
@@ -54,7 +54,8 @@ export default function Join() {
             showAlert(
                 'Name Required',
                 'Please set your display name in Settings first.',
-                [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
+                [{ text: 'Go to Settings', onPress: () => router.push('/settings') }],
+                'warning'
             );
             return;
         }
@@ -82,12 +83,12 @@ export default function Join() {
                 } else {
                     // Bug 2 Fix: Show user-friendly error messages
                     const errorInfo = getErrorMessage(response.error || '');
-                    showAlert(errorInfo.title, errorInfo.message);
+                    showAlert(errorInfo.title, errorInfo.message, undefined, 'error');
                 }
             });
         } catch (error) {
             setIsConnecting(false);
-            showAlert('Connection Error', 'Failed to connect to server. Make sure the server is running and try again.');
+            showAlert('Connection Error', 'Failed to connect to server. Make sure the server is running and try again.', undefined, 'error');
             console.error('Connection error:', error);
         }
     };

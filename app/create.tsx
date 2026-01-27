@@ -1,27 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, ImageBackground, Modal, Platform, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, ImageBackground, Modal, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from './context/GameContext';
 import socketService from './services/socketService';
 import SliderComponent from './sliderComponent';
 import SliderMafia from "./sliderMafia";
 
-// Web-compatible alert helper
-const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
-  if (Platform.OS === 'web') {
-    if (buttons && buttons.length > 0) {
-      const confirmed = window.confirm(`${title}\n\n${message}`);
-      if (confirmed && buttons[0]?.onPress) {
-        buttons[0].onPress();
-      }
-    } else {
-      window.alert(`${title}\n\n${message}`);
-    }
-  } else {
-    Alert.alert(title, message, buttons);
-  }
-};
+import { useAlert } from './context/AlertContext';
 
 const backgroundImage = require("../assets/images/background.png");
 
@@ -33,6 +19,7 @@ const VOTING_TIME_OPTIONS = [30, 45, 60, 90];
 export default function Create() {
   const router = useRouter();
   const { settings, updateSettings, setIsHost, setMyPlayerId, playerName } = useGame();
+  const { showAlert } = useAlert();
 
   // Local state for UI
   const [playerCount, setPlayerCount] = useState(settings.maxPlayers || 7);
@@ -62,7 +49,8 @@ export default function Create() {
       showAlert(
         'Name Required',
         'Please set your display name in Settings first.',
-        [{ text: 'Go to Settings', onPress: () => router.push('/settings') }]
+        [{ text: 'Go to Settings', onPress: () => router.push('/settings') }],
+        'warning'
       );
       return;
     }
@@ -96,13 +84,13 @@ export default function Create() {
           // Navigate to lobby
           router.push('/lobby');
         } else {
-          showAlert('Error', response.error || 'Failed to create room');
+          showAlert('Error', response.error || 'Failed to create room', undefined, 'error');
         }
       });
     } catch (error) {
       setIsConnecting(false);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      showAlert('Connection Error', `Failed to connect to server: ${errorMessage}. Make sure the server is running and accessible.`);
+      showAlert('Connection Error', `Failed to connect to server: ${errorMessage}. Make sure the server is running and accessible.`, undefined, 'error');
       console.error('Connection error:', error);
     }
   };
@@ -239,15 +227,7 @@ export default function Create() {
             </Text>
           </View>
 
-          {/* Game Settings Summary */}
-          {/* <View style={styles.settingsSummary}>
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 14, color: '#AAAAAA', marginTop: 10 }}>
-              Discussion: {formatTime(discussionTime)}
-            </Text>
-            <Text style={{ fontFamily: 'Gruesome', fontSize: 14, color: '#AAAAAA', marginTop: 5 }}>
-              Voting: {formatTime(votingTime)}
-            </Text>
-          </View> */}
+
         </View>
       </View>
 

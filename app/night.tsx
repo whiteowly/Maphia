@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import socketService from './services/socketService';
 import { formatCountdown } from './types/game';
@@ -11,6 +12,7 @@ const backgroundImage = require("../assets/images/lobby.png");
 export default function Night() {
     const router = useRouter();
     const { settings, myRole, myPlayerId, setPhase, maphiaTeammates, players, setPlayers, timeRemaining, setTimeRemaining } = useGame();
+    const { showAlert } = useAlert();
 
     // State
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export default function Night() {
 
     const handleConfirmAction = () => {
         if (!selectedPlayer) {
-            Alert.alert('Select a player', 'Please select a player.');
+            showAlert('Select a player', 'Please select a player.', undefined, 'warning');
             return;
         }
 
@@ -91,7 +93,7 @@ export default function Night() {
             if (response.success) {
                 setHasVoted(true);
             } else {
-                Alert.alert('Error', response.error || 'Failed to submit action');
+                showAlert('Error', response.error || 'Failed to submit action', undefined, 'error');
             }
         };
 
@@ -118,7 +120,7 @@ export default function Night() {
     };
 
     const handleLeave = () => {
-        Alert.alert(
+        showAlert(
             'Leave Game',
             'Are you sure you want to leave the game?',
             [
@@ -131,7 +133,8 @@ export default function Night() {
                         router.replace('/');
                     }
                 },
-            ]
+            ],
+            'blood'
         );
     };
 

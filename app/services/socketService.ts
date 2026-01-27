@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 
 // Server URL configuration
 // __DEV__ is true when running locally in development mode
-const DEV_URL = process.env.EXPO_PUBLIC_DEV_API_URL || 'http://localhost:3001';
+const DEV_URL = process.env.EXPO_PUBLIC_DEV_API_URL || 'http://192.168.1.4:3001';
 const PROD_URL = process.env.EXPO_PUBLIC_PROD_API_URL || 'https://maphia-5u6b.onrender.com';
 
 // Automatically select URL based on environment

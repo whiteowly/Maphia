@@ -1,5 +1,12 @@
-import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming
+} from 'react-native-reanimated';
 
 export type AlertButton = {
     text: string;
@@ -7,45 +14,80 @@ export type AlertButton = {
     style?: 'default' | 'cancel' | 'destructive';
 };
 
+export type AlertType = 'info' | 'warning' | 'error' | 'success' | 'blood';
+
 interface CustomAlertProps {
     visible: boolean;
     title: string;
     message: string;
     buttons?: AlertButton[];
     onDismiss?: () => void;
+    type?: AlertType;
 }
 
-export default function CustomAlert({ visible, title, message, buttons = [], onDismiss }: CustomAlertProps) {
+// Icon logic removed as per user request to remove 'emojis' (icons)
+
+export default function CustomAlert({ visible, title, message, buttons = [], onDismiss, type = 'info' }: CustomAlertProps) {
+    const scale = useSharedValue(0.9);
+    const opacity = useSharedValue(0);
+
+    useEffect(() => {
+        if (visible) {
+            scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+            opacity.value = withTiming(1, { duration: 300 });
+        } else {
+            scale.value = withTiming(0.9, { duration: 200 });
+            opacity.value = withTiming(0, { duration: 200 });
+        }
+    }, [visible, scale, opacity]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+        opacity: opacity.value,
+    }));
+
     // Default button if none provided
     const actionButtons = buttons.length > 0 ? buttons : [{ text: 'OK', onPress: onDismiss }];
 
     return (
         <Modal
-            animationType="fade"
+            animationType="none"
             transparent={true}
             visible={visible}
             onRequestClose={onDismiss}
         >
             <View style={styles.centeredView}>
-                <View style={styles.modalView}>
-                    <Text style={styles.modalTitle}>{title}</Text>
-                    <Text style={styles.modalText}>{message}</Text>
+                <Animated.View style={[styles.modalViewContainer, animatedStyle]}>
+                    <LinearGradient
+                        colors={['#220101', '#4a0000']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.modalView}
+                    >
+                        <Text style={styles.modalTitle}>{title}</Text>
+                        <Text style={styles.modalText}>{message}</Text>
 
-                    <View style={styles.buttonContainer}>
-                        {actionButtons.map((btn, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[styles.button, btn.style === 'cancel' && styles.buttonCancel]}
-                                onPress={() => {
-                                    if (btn.onPress) btn.onPress();
-                                    else if (onDismiss) onDismiss();
-                                }}
-                            >
-                                <Text style={styles.textStyle}>{btn.text}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+                        <View style={styles.buttonContainer}>
+                            {actionButtons.map((btn, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    activeOpacity={0.7}
+                                    style={[
+                                        styles.button,
+                                        btn.style === 'cancel' && styles.buttonCancel,
+                                        btn.style === 'destructive' && styles.buttonDestructive
+                                    ]}
+                                    onPress={() => {
+                                        if (btn.onPress) btn.onPress();
+                                        else if (onDismiss) onDismiss();
+                                    }}
+                                >
+                                    <Text style={styles.textStyle}>{btn.text}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </LinearGradient>
+                </Animated.View>
             </View>
         </Modal>
     );
@@ -56,62 +98,73 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
     },
-    modalView: {
-        margin: 20,
-        backgroundColor: '#220101',
+    modalViewContainer: {
+        width: '75%',
+        maxWidth: 320,
         borderRadius: 20,
-        padding: 25,
-        alignItems: 'center',
-        shadowColor: 'red',
+        overflow: 'hidden',
+        shadowColor: '#ff0000',
         shadowOffset: {
             width: 0,
-            height: 2,
+            height: 4,
         },
         shadowOpacity: 0.5,
-        shadowRadius: 4,
-        elevation: 10,
-        borderWidth: 1,
+        shadowRadius: 10,
+        elevation: 15,
+        borderWidth: 1.5,
         borderColor: '#610000',
-        width: '80%',
-        maxWidth: 400,
+    },
+    modalView: {
+        paddingVertical: 20,
+        paddingHorizontal: 25,
+        alignItems: 'center',
     },
     modalTitle: {
-        marginBottom: 15,
+        marginBottom: 10,
         textAlign: 'center',
         fontFamily: 'Gruesome',
-        fontSize: 32,
+        fontSize: 28,
         color: 'white',
+        letterSpacing: 1,
+        textShadowColor: 'rgba(255, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
     modalText: {
-        marginBottom: 25,
+        marginBottom: 20,
         textAlign: 'center',
         fontFamily: 'Gruesome',
-        fontSize: 20,
-        color: '#cabdb7',
+        fontSize: 18,
+        color: '#e0d5d0',
+        lineHeight: 24,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 10,
+        gap: 15,
         flexWrap: 'wrap',
     },
     button: {
-        borderRadius: 20,
-        padding: 10,
-        elevation: 2,
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
         backgroundColor: '#610000',
-        minWidth: 100,
-        borderColor: 'rgba(255, 0, 0, 0.3)',
+        minWidth: 90,
+        borderColor: 'rgba(255, 0, 0, 0.4)',
         borderWidth: 1,
     },
     buttonCancel: {
-        backgroundColor: '#333',
+        backgroundColor: '#2b2b2b',
+        borderColor: '#444',
+    },
+    buttonDestructive: {
+        backgroundColor: '#aa0000',
+        borderColor: '#ff4444',
     },
     textStyle: {
         color: 'white',
-        fontWeight: 'bold',
         textAlign: 'center',
         fontFamily: 'Gruesome',
         fontSize: 18,

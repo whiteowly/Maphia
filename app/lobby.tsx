@@ -2,7 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import { useMusic } from './context/MusicContext';
 import socketService, { Player, RoleAssignment, RoomUpdate } from './services/socketService';
@@ -14,6 +15,7 @@ export default function Lobby() {
     const router = useRouter();
     const { settings, isHost, setIsHost, myPlayerId, setMyRole, setPhase, updateSettings, setMaphiaTeammates } = useGame();
     const { stopMusic } = useMusic();
+    const { showAlert } = useAlert();
 
     // State from socket
     const [players, setPlayers] = useState<Player[]>([]);
@@ -130,18 +132,18 @@ export default function Lobby() {
 
     const handleStartGame = () => {
         if (!isHost) {
-            Alert.alert('Error', 'Only the host can start the game');
+            showAlert('Error', 'Only the host can start the game', undefined, 'error');
             return;
         }
 
         if (players.length < 5) {
-            Alert.alert('Not Enough Players', `Need at least 5 players to start. Currently have ${players.length}.`);
+            showAlert('Not Enough Players', `Need at least 5 players to start. Currently have ${players.length}.`, undefined, 'warning');
             return;
         }
 
         const notReady = players.filter(p => !p.isReady);
         if (notReady.length > 0) {
-            Alert.alert('Players Not Ready', `${notReady.length} player(s) are not ready yet.`);
+            showAlert('Players Not Ready', `${notReady.length} player(s) are not ready yet.`, undefined, 'warning');
             return;
         }
 
@@ -149,37 +151,29 @@ export default function Lobby() {
         socketService.startGame((response) => {
             setIsStarting(false);
             if (!response.success) {
-                Alert.alert('Error', response.error || 'Failed to start game');
+                showAlert('Error', response.error || 'Failed to start game', undefined, 'error');
             }
         });
     };
 
     const handleLeave = () => {
-        // Use window.confirm on web, Alert.alert on mobile
-        if (typeof window !== 'undefined' && window.confirm) {
-            if (window.confirm('Are you sure you want to leave?')) {
-                console.log('Leaving lobby...');
-                socketService.disconnect();
-                router.replace('/');
-            }
-        } else {
-            Alert.alert(
-                'Leave Lobby',
-                'Are you sure you want to leave?',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Leave',
-                        style: 'destructive',
-                        onPress: () => {
-                            console.log('Leaving lobby...');
-                            socketService.disconnect();
-                            router.replace('/');
-                        }
-                    },
-                ]
-            );
-        }
+        showAlert(
+            'Leave Lobby',
+            'Are you sure you want to leave?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Leave',
+                    style: 'destructive',
+                    onPress: () => {
+                        console.log('Leaving lobby...');
+                        socketService.disconnect();
+                        router.replace('/');
+                    }
+                },
+            ],
+            'blood'
+        );
     };
 
     // Calculate civilians

@@ -205,7 +205,7 @@ export default function GameOver() {
                 <View style={styles.buttonContainer}>
                     {waitingForHost ? (
                         <View style={styles.waitingContainer}>
-                            <Text style={styles.waitingText}>⏳ Waiting for host...</Text>
+                            <Text style={styles.waitingText}>Waiting for host...</Text>
                         </View>
                     ) : (
                         <TouchableOpacity

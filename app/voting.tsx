@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import socketService, { Player, VotingResults } from './services/socketService';
 import { formatCountdown } from './types/game';
@@ -11,6 +12,7 @@ const backgroundImage = require("../assets/images/day_background.png");
 export default function Voting() {
     const router = useRouter();
     const { settings, myRole, myPlayerId, setPhase, maphiaTeammates } = useGame();
+    const { showAlert } = useAlert();
 
     // State from socket
     const [timeRemaining, setTimeRemaining] = useState(settings.votingTimeSeconds || 30);
@@ -111,7 +113,7 @@ export default function Voting() {
 
     const handleConfirmVote = () => {
         if (!selectedPlayer) {
-            Alert.alert('Select a player', 'Please select a player to vote for.');
+            showAlert('Select a player', 'Please select a player to vote for.', undefined, 'warning');
             return;
         }
 
@@ -119,7 +121,7 @@ export default function Voting() {
             if (response.success) {
                 setHasVoted(true);
             } else {
-                Alert.alert('Error', response.error || 'Failed to submit vote');
+                showAlert('Error', response.error || 'Failed to submit vote', undefined, 'error');
             }
         });
     };
@@ -134,7 +136,7 @@ export default function Voting() {
     };
 
     const handleLeave = () => {
-        Alert.alert(
+        showAlert(
             'Leave Game',
             'Are you sure you want to leave the game?',
             [
@@ -147,7 +149,8 @@ export default function Voting() {
                         router.replace('/');
                     }
                 },
-            ]
+            ],
+            'blood'
         );
     };
 
