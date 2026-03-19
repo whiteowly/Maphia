@@ -82,7 +82,7 @@ export default function Create() {
           setMyPlayerId(response.playerId!);
 
           // Navigate to lobby
-          router.push('/lobby');
+          router.replace('/lobby');
         } else {
           showAlert('Error', response.error || 'Failed to create room', undefined, 'error');
         }
@@ -159,7 +159,7 @@ export default function Create() {
   );
 
   return (
-    <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
+    <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
       <StatusBar hidden={true} />
       <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
         <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
@@ -273,7 +273,13 @@ export default function Create() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: "cover",
+    width: '100%',
+    height: '100%',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   container: {
     flex: 1,
@@ -281,17 +287,17 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 50,
     alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginLeft: 10,
-    marginRight: 10,
+    justifyContent: "center",
+    width: '100%',
+    maxWidth: 1000,
+    alignSelf: 'center',
+    gap: 20,
   },
   cardContainer: {
     flexDirection: 'column',
     padding: 15,
     borderRadius: 10,
     margin: 10,
-    marginLeft: 50,
-    marginRight: 10,
     flex: 0.7,
     backgroundColor: '#22010180',
     shadowColor: '#250101ff',
@@ -302,14 +308,15 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   shareButton: {
-    width: '30%',
-    height: '40%',
+    width: '80%',
+    maxWidth: 300,
+    height: 55,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#610000ff',
     borderRadius: 100,
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 20,
+    marginBottom: 20,
     shadowColor: '#640303ff',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
@@ -328,8 +335,6 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     margin: 10,
-    marginLeft: 10,
-    marginRight: 20,
     flex: 0.3,
     backgroundColor: '#22010180',
     shadowColor: '#250101ff',

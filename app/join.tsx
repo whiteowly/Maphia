@@ -79,7 +79,7 @@ export default function Join() {
                     setMyPlayerId(response.playerId!);
 
                     // Navigate to lobby
-                    router.push('/lobby');
+                    router.replace('/lobby');
                 } else {
                     // Bug 2 Fix: Show user-friendly error messages
                     const errorInfo = getErrorMessage(response.error || '');
@@ -94,7 +94,7 @@ export default function Join() {
     };
 
     return (
-        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
+        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
                 <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
@@ -152,7 +152,13 @@ export default function Join() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     Text: {
         color: '#cabdb7',
@@ -163,8 +169,9 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 8,
         margin: 10,
-        marginLeft: 200,
-        marginRight: 200,
+        width: '90%',
+        maxWidth: 400,
+        alignSelf: 'center',
         backgroundColor: '#22010180',
         shadowColor: '#250101ff',
         shadowOffset: { width: 0, height: 2 },
@@ -173,14 +180,15 @@ const styles = StyleSheet.create({
 
     },
     shareButton: {
-        width: '25%',
-        height: '100%',
+        width: '80%',
+        maxWidth: 300,
+        height: 55,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#610000ff',
         borderRadius: 100,
-        marginTop: 0,
-        marginBottom: 7,
+        marginTop: 20,
+        marginBottom: 20,
         shadowColor: '#640303ff',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,

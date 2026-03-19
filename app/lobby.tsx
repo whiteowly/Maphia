@@ -2,7 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ChatPanel from './components/ChatPanel';
 import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import { useMusic } from './context/MusicContext';
@@ -28,6 +29,21 @@ export default function Lobby() {
 
     // Set up socket listeners
     useEffect(() => {
+        // Request current room state on mount (fixes race condition where
+        // the room_update emitted during join is missed before this screen mounts)
+        socketService.requestRoomState((response) => {
+            if (response.success) {
+                setPlayers(response.players || []);
+                setRoomState(response.state);
+                if (response.state?.hostId === myPlayerId) {
+                    setIsHost(true);
+                }
+                if (response.state?.settings) {
+                    updateSettings(response.state.settings);
+                }
+            }
+        });
+
         // Listen for room updates
         const unsubRoomUpdate = socketService.on('room_update', (data: RoomUpdate) => {
             setPlayers(data.players);
@@ -111,6 +127,26 @@ export default function Lobby() {
             unsubPlayerLeft();
             unsubGameStarted();
             unsubRoleAssigned();
+            unsubRoleAssigned();
+        };
+    }, []);
+
+    // Listen separately to ensure navigation works
+    useEffect(() => {
+        const unsubKicked = socketService.on('player_kicked', () => {
+            console.log('You were kicked from the room');
+            showAlert('Kicked', 'You have been kicked from the room by the host.', [
+                {
+                    text: 'OK', onPress: () => {
+                        socketService.disconnect();
+                        router.replace('/');
+                    }
+                }
+            ], 'blood');
+        });
+
+        return () => {
+            unsubKicked();
         };
     }, []);
 
@@ -176,6 +212,28 @@ export default function Lobby() {
         );
     };
 
+    const handleKick = (playerId: string, playerName: string) => {
+        showAlert(
+            'Kick Player',
+            `Are you sure you want to kick ${playerName}?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Kick',
+                    style: 'destructive',
+                    onPress: () => {
+                        socketService.kickPlayer(playerId, (response) => {
+                            if (!response.success) {
+                                showAlert('Error', response.error || 'Failed to kick player', undefined, 'error');
+                            }
+                        });
+                    }
+                },
+            ],
+            'blood'
+        );
+    };
+
     // Calculate civilians
     const maxPlayers = roomState?.settings?.maxPlayers || settings.maxPlayers || 7;
     const maphiaCount = roomState?.settings?.maphiaCount || settings.maphiaCount || 2;
@@ -187,7 +245,7 @@ export default function Lobby() {
     const allReady = players.length >= 5 && players.every(p => p.isReady);
 
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
 
             {/* Back Button */}
@@ -201,7 +259,12 @@ export default function Lobby() {
 
             {/* Main Content */}
             <View style={styles.mainContent}>
-                {/* Players List Card */}
+                {/* Chat Panel (left) */}
+                <View style={styles.chatCard}>
+                    <ChatPanel myPlayerId={myPlayerId} allowQuickChat={false} />
+                </View>
+
+                {/* Players List Card (middle) */}
                 <View style={styles.cardContainer1}>
                     <Text style={{ fontFamily: 'Gruesome', fontSize: 30, color: '#cabdb7', marginTop: 5, alignSelf: 'flex-start' }}>
                         Players ({players.length}/{maxPlayers})
@@ -224,6 +287,14 @@ export default function Lobby() {
                                     {player.isReady && (
                                         <Text style={{ fontFamily: 'Gruesome', fontSize: 18, color: '#7BFF7B', marginLeft: 10 }}>✓</Text>
                                     )}
+                                    {isHost && player.id !== myPlayerId && (
+                                        <TouchableOpacity
+                                            onPress={() => handleKick(player.id, player.name)}
+                                            style={styles.kickButton}
+                                        >
+                                            <MaterialIcons name="remove-circle-outline" size={20} color="#FF6B6B" />
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             ))}
                             {/* Empty slots */}
@@ -243,7 +314,7 @@ export default function Lobby() {
                     )}
                 </View>
 
-                {/* Game Settings Card */}
+                {/* Game Settings Card (right) */}
                 <View style={styles.settingsCard}>
                     <Text style={{ fontFamily: 'Gruesome', fontSize: 24, color: '#cabdb7', marginBottom: 10 }}>Game Settings</Text>
                     <Text style={{ fontFamily: 'Gruesome', fontSize: 16, color: '#AAAAAA' }}>
@@ -310,18 +381,25 @@ export default function Lobby() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     Text: {
         color: "#cabdb7",
         fontFamily: 'Gruesome',
     },
     mainContent: {
-        flex: 1,
         flexDirection: 'row',
         paddingHorizontal: 10,
+        paddingVertical: 10,
         width: '100%',
         maxWidth: 1200,
+        maxHeight: Platform.OS === 'web' ? '50%' : undefined,
         alignSelf: 'center',
     },
     cardContainer1: {
@@ -329,8 +407,7 @@ const styles = StyleSheet.create({
         padding: 15,
         margin: 10,
         marginLeft: 10,
-        flex: 0.4,
-        maxHeight: 350,
+        flex: 0.3,
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderRadius: 8,
     },
@@ -340,8 +417,11 @@ const styles = StyleSheet.create({
         margin: 10,
         backgroundColor: '#22010180',
         borderRadius: 8,
-        flex: 0.3,
-        maxHeight: 200,
+        flex: 0.2,
+    },
+    chatCard: {
+        flex: 0.5,
+        margin: 10,
     },
     timeDivider: {
         height: 1,
@@ -419,5 +499,9 @@ const styles = StyleSheet.create({
     roomPress: {
         marginBottom: 8,
         alignItems: 'flex-end',
+    },
+    kickButton: {
+        marginLeft: 'auto',
+        padding: 5,
     }
 });

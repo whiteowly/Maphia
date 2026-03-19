@@ -7,14 +7,14 @@ const backgroundImage = require("../assets/images/background.png");
 
 export default function Login() {
     const handleShare = () => {
-        router.push('/lobby');
+        router.replace('/lobby');
     };
     const router = useRouter();
     const [text, onChangeText] = React.useState('email...');
     const [password, onChangePassword] = React.useState('Password...');
 
     return (
-        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
+        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
             <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel="Go back">
                 <MaterialIcons name="arrow-back" size={30} color="#cabdb7" />
@@ -53,7 +53,13 @@ export default function Login() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     Text: {
         color: "#cabdb7",
@@ -64,8 +70,9 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 3,
         margin: 10,
-        marginLeft: 200,
-        marginRight: 200,
+        width: '90%',
+        maxWidth: 400,
+        alignSelf: 'center',
         backgroundColor: '#22010180',
         shadowColor: '#250101ff',
         shadowOffset: { width: 0, height: 2 },

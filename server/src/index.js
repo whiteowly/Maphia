@@ -20,6 +20,9 @@ const io = new Server(server, {
 // Structure: { roomCode: GameRoom }
 const rooms = new Map();
 
+// Rate limiting for chat messages (playerId -> timestamp)
+const chatRateLimit = new Map();
+
 // Game room class
 class GameRoom {
     constructor(roomCode, hostId, settings) {
@@ -404,6 +407,78 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Request current room state (used by lobby on mount to avoid race condition)
+    socket.on('request_room_state', (data, callback) => {
+        const room = rooms.get(currentRoom);
+        if (!room) {
+            callback?.({ success: false, error: 'Room not found' });
+            return;
+        }
+
+        callback?.({
+            success: true,
+            state: room.getState(),
+            players: room.getPublicPlayerList(),
+        });
+    });
+
+    // Kick player (host only)
+    socket.on('kick_player', (data, callback) => {
+        const { targetId } = data;
+        const room = rooms.get(currentRoom);
+
+        if (!room) {
+            callback({ success: false, error: 'Room not found' });
+            return;
+        }
+
+        if (room.hostId !== playerId) {
+            callback({ success: false, error: 'Only host can kick players' });
+            return;
+        }
+
+        if (targetId === playerId) {
+            callback({ success: false, error: 'Cannot kick yourself' });
+            return;
+        }
+
+        const playerToRemove = room.players.get(targetId);
+        if (!playerToRemove) {
+            callback({ success: false, error: 'Player not found' });
+            return;
+        }
+
+        // Notify the kicked player specifically
+        io.to(targetId).emit('player_kicked', {
+            roomCode: room.roomCode,
+        });
+
+        // Force socket leave (optional, but good practice)
+        const targetSocket = io.sockets.sockets.get(targetId);
+        if (targetSocket) {
+            targetSocket.leave(room.roomCode);
+        }
+
+        // Remove from room data
+        room.removePlayer(targetId);
+
+        console.log(`Player ${playerToRemove.name} kicked from room ${room.roomCode}`);
+
+        callback({ success: true });
+
+        // Notify remaining players
+        io.to(room.roomCode).emit('player_left', {
+            playerId: targetId,
+            name: playerToRemove.name,
+            kicked: true
+        });
+
+        io.to(room.roomCode).emit('room_update', {
+            state: room.getState(),
+            players: room.getPublicPlayerList(),
+        });
+    });
+
     // Start the game (host only)
     socket.on('start_game', (data, callback) => {
         const room = rooms.get(currentRoom);
@@ -552,6 +627,11 @@ io.on('connection', (socket) => {
             return;
         }
 
+        if (player.isDead) {
+            callback({ success: false, error: 'Dead players cannot save' });
+            return;
+        }
+
         // Can't save self
         if (targetId === playerId) {
             callback({ success: false, error: "You can't save yourself" });
@@ -564,6 +644,69 @@ io.on('connection', (socket) => {
 
         // Bug 4 Fix: Check if night is complete (both Maphia and Guardian voted)
         checkNightComplete(room);
+    });
+
+    // Send chat message (free text or preset)
+    socket.on('send_message', (data, callback) => {
+        const room = rooms.get(currentRoom);
+
+        if (!room) {
+            callback?.({ success: false, error: 'Room not found' });
+            return;
+        }
+
+        // Phase check: only allow chat during lobby and discussion
+        if (room.phase !== 'lobby' && room.phase !== 'discussion') {
+            callback?.({ success: false, error: 'Chat is only available during lobby and discussion' });
+            return;
+        }
+
+        // Dead player check
+        const player = room.players.get(playerId);
+        if (!player) {
+            callback?.({ success: false, error: 'Player not found' });
+            return;
+        }
+        if (player.isDead) {
+            callback?.({ success: false, error: 'Dead players cannot chat' });
+            return;
+        }
+
+        // Rate limiting: 1 message per second
+        const now = Date.now();
+        const lastTime = chatRateLimit.get(playerId) || 0;
+        if (now - lastTime < 1000) {
+            callback?.({ success: false, error: 'Slow down! Wait a moment before sending.' });
+            return;
+        }
+        chatRateLimit.set(playerId, now);
+
+        // Validate message content
+        const { text, isPreset, presetId } = data;
+
+        if (!isPreset) {
+            // Free text validation
+            if (!text || typeof text !== 'string' || text.trim().length === 0) {
+                callback?.({ success: false, error: 'Message cannot be empty' });
+                return;
+            }
+            if (text.length > 200) {
+                callback?.({ success: false, error: 'Message too long (max 200 characters)' });
+                return;
+            }
+        }
+
+        // Broadcast to room
+        io.to(room.roomCode).emit('chat_message', {
+            senderId: playerId,
+            senderName: player.name,
+            text: isPreset ? null : text.trim(),
+            isPreset: !!isPreset,
+            presetId: isPreset ? presetId : null,
+            timestamp: now,
+        });
+
+        callback?.({ success: true });
     });
 
     // Handle disconnect
@@ -839,11 +982,33 @@ io.on('connection', (socket) => {
             guardianSavedName: guardianSavedPlayer?.name || null,
         });
 
-        console.log(`[DEBUG] Scheduling discussion phase in 5 seconds for room ${room.roomCode}`);
-        setTimeout(() => {
-            console.log(`[DEBUG] Starting discussion phase for room ${room.roomCode}`);
-            startDiscussionPhase(room);
-        }, 5000);
+        // Check win condition (e.g. if Maphia killed everyone or now equal to civilians)
+        const winCheck = room.checkWinCondition();
+
+        if (winCheck.gameOver) {
+            console.log(`[DEBUG] Game Over after night phase! Winner: ${winCheck.winner}`);
+            room.phase = 'game_over';
+
+            // Reveal all roles at game end
+            const allRoles = {};
+            for (const [id, player] of room.players) {
+                allRoles[id] = { name: player.name, role: player.role, isDead: player.isDead };
+            }
+
+            // Wait a moment for players to see the night result, then show game over
+            setTimeout(() => {
+                io.to(room.roomCode).emit('game_over', {
+                    winner: winCheck.winner,
+                    allRoles: allRoles,
+                });
+            }, 4000); // 4 seconds delay to read night results
+        } else {
+            console.log(`[DEBUG] Scheduling discussion phase in 5 seconds for room ${room.roomCode}`);
+            setTimeout(() => {
+                console.log(`[DEBUG] Starting discussion phase for room ${room.roomCode}`);
+                startDiscussionPhase(room);
+            }, 5000);
+        }
     }
 
     // Helper function to start discussion phase

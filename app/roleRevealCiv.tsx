@@ -59,7 +59,7 @@ const RoleRevealCiv = () => {
     };
 
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleQuit} style={styles.backButton} accessibilityLabel="Quit game">
@@ -100,7 +100,13 @@ export default RoleRevealCiv;
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     Text: {
         color: "white",

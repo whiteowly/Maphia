@@ -118,7 +118,7 @@ export default function Settings() {
     };
 
     return (
-        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background}>
+        <ImageBackground blurRadius={10} source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
 
             {/* Brightness overlay */}
@@ -222,7 +222,13 @@ export default function Settings() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     brightnessOverlay: {
         ...StyleSheet.absoluteFillObject,

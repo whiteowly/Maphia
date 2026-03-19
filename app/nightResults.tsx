@@ -14,16 +14,13 @@ const NightResultsScreen = () => {
 
     useEffect(() => {
         // First, try to get results from sessionStorage (set by guardian.tsx before navigating)
-        if (typeof window !== 'undefined') {
-            const storedResults = sessionStorage.getItem('nightResults');
-            if (storedResults) {
-                try {
-                    setResults(JSON.parse(storedResults));
-                    sessionStorage.removeItem('nightResults'); // Clean up
-                } catch (e) {
-                    console.error('Failed to parse night results:', e);
-                }
-            }
+        // Check for stored results in socketService (supports both web and mobile)
+        const storedResults = socketService.getNightResultsData();
+        if (storedResults) {
+            setResults(storedResults);
+            // Optional: clear it if you only want to show it once,
+            // but for results screen re-renders it might be better to keep it
+            // until next turn overwrites it.
         }
 
         // Also listen for the event directly (in case we're already on this screen)
@@ -91,7 +88,7 @@ const NightResultsScreen = () => {
     const message = getMessage();
 
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleQuit} style={styles.backButton}>
@@ -127,7 +124,13 @@ export default NightResultsScreen;
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     container: {
         flex: 1,

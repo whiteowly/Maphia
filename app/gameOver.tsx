@@ -126,9 +126,11 @@ export default function GameOver() {
             <Animated.View style={[styles.cardWrapper, { opacity: fadeAnim }]}>
                 <View>
                     <Image source={jokerCard} style={styles.card} resizeMode="contain" />
-                    {/* <View style={styles.nameOverlay}>
-                        <Text style={styles.cardNameText}>{winningPlayers[0]?.name || 'Joker'}</Text>
-                    </View> */}
+                    <View style={styles.nameOverlay}>
+                        <Text style={styles.cardNameText}>
+                            {winningPlayers.map(p => p.name).join(', ')}
+                        </Text>
+                    </View>
                 </View>
             </Animated.View>
             <Text style={styles.winTitle}>JOKER WINS!</Text>
@@ -142,9 +144,11 @@ export default function GameOver() {
             <Animated.View style={[styles.cardWrapper, { opacity: fadeAnim }]}>
                 <View>
                     <Image source={maphiaCard} style={styles.card} resizeMode="contain" />
-                    {/* <View style={styles.nameOverlay}>
-                        <Text style={styles.cardNameText}>{winningPlayers[0]?.name || 'Joker'}</Text>
-                    </View> */}
+                    <View style={styles.nameOverlay}>
+                        <Text style={styles.cardNameText}>
+                            {winningPlayers.map(p => p.name).join(', ')}
+                        </Text>
+                    </View>
                 </View>
             </Animated.View>
             <Text style={styles.winTitle}>MAPHIAS WIN!</Text>
@@ -162,9 +166,11 @@ export default function GameOver() {
                     <View>
                         <Image source={civilianCard} style={styles.card} resizeMode="contain" />
 
-                        {/* <View style={styles.nameOverlay}>
-                        <Text style={styles.cardNameText}>{winningPlayers[0]?.name || 'Joker'}</Text>
-                    </View> */}
+                        <View style={styles.nameOverlay}>
+                            <Text style={styles.cardNameText}>
+                                {winningPlayers.map(p => p.name).join(', ')}
+                            </Text>
+                        </View>
                     </View>
                 </Animated.View>
                 <Text style={styles.winTitle}>CIVILIANS WIN!</Text>
@@ -197,7 +203,7 @@ export default function GameOver() {
     };
 
     return (
-        <ImageBackground source={backgroundImage} style={[styles.background,]}>
+        <ImageBackground source={backgroundImage} style={[styles.background,]} imageStyle={styles.backgroundImage}>
             <View style={styles.container}>
                 {renderWinDisplay()}
 
@@ -233,7 +239,13 @@ export default function GameOver() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     container: {
         flex: 1,

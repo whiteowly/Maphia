@@ -27,7 +27,7 @@ export default function Index() {
     startMusic().then(() => setShowPlayButton(false)).catch(() => { });
   };
   return (
-    <ImageBackground source={backgroundImage} style={styles.background}>
+    <ImageBackground source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
       <StatusBar hidden={true} />
       <View style={styles.container}>
         <Link href="/create" style={styles.link}>Host a Game</Link>
@@ -40,9 +40,15 @@ export default function Index() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: "cover",
+    width: '100%',
+    height: '100%',
     justifyContent: "center",
     alignItems: "center",
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   container: {
     width: '100%',
@@ -50,7 +56,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     marginTop: 100,
-    marginLeft: 140,
+    alignSelf: 'center',
     gap: 0
   },
   title: {

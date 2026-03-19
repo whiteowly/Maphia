@@ -1,15 +1,17 @@
 import { io, Socket } from 'socket.io-client';
 
 // Server URL configuration
+// EXPO_PUBLIC_SERVER_URL can override the automatic selection (useful for web:prod)
 // __DEV__ is true when running locally in development mode
-const DEV_URL = process.env.EXPO_PUBLIC_DEV_API_URL || 'http://192.168.1.4:3001';
+const DEV_URL = process.env.EXPO_PUBLIC_DEV_API_URL || 'http://147.138.185.68:3001';
 const PROD_URL = process.env.EXPO_PUBLIC_PROD_API_URL || 'https://maphia-5u6b.onrender.com';
 
-// Automatically select URL based on environment
-export const SERVER_URL = __DEV__ ? DEV_URL : PROD_URL;
+// Check for explicit override first, then fall back to automatic selection
+const OVERRIDE_URL = process.env.EXPO_PUBLIC_SERVER_URL;
+export const SERVER_URL = OVERRIDE_URL || (__DEV__ ? DEV_URL : PROD_URL);
 
 // Debug log for checking connection URL
-console.log(`[SocketService] Connecting to: ${SERVER_URL} (DEV: ${__DEV__})`);
+console.log(`[SocketService] Connecting to: ${SERVER_URL} (DEV: ${__DEV__}, Override: ${OVERRIDE_URL ? 'yes' : 'no'})`);
 
 // Event types
 export type GamePhase = 'lobby' | 'role_reveal' | 'night' | 'guardian' | 'discussion' | 'voting' | 'results' | 'game_over';
@@ -85,6 +87,7 @@ class SocketService {
     private socket: Socket | null = null;
     private listeners: Map<string, Set<Function>> = new Map();
     private gameOverData: any = null;
+    private nightResultsData: any = null;
 
     // Store game over data for retrieval
     setGameOverData(data: any): void {
@@ -94,6 +97,16 @@ class SocketService {
     // Get stored game over data
     getGameOverData(): any {
         return this.gameOverData;
+    }
+
+    // Store night results data for retrieval
+    setNightResultsData(data: any): void {
+        this.nightResultsData = data;
+    }
+
+    // Get stored night results data
+    getNightResultsData(): any {
+        return this.nightResultsData;
     }
 
     // Send event to server (public method for game over screen)
@@ -172,6 +185,8 @@ class SocketService {
             'return_to_lobby',
             'host_left',
             'waiting_for_host',
+            'player_kicked',
+            'chat_message',
         ];
 
         events.forEach((event) => {
@@ -241,7 +256,6 @@ class SocketService {
         this.socket.emit('submit_night_vote', { targetId }, callback);
     }
 
-    // Submit guardian save (Guardian only)
     submitGuardianSave(targetId: string | null, callback: SubmitVoteCallback): void {
         if (!this.socket) {
             callback({ success: false, error: 'Not connected' });
@@ -249,6 +263,36 @@ class SocketService {
         }
 
         this.socket.emit('submit_guardian_save', { targetId }, callback);
+    }
+
+    // Kick a player (Host only)
+    kickPlayer(targetId: string, callback: SubmitVoteCallback): void {
+        if (!this.socket) {
+            callback({ success: false, error: 'Not connected' });
+            return;
+        }
+
+        this.socket.emit('kick_player', { targetId }, callback);
+    }
+
+    // Send a chat message (free text or preset)
+    sendMessage(text: string | null, isPreset: boolean, presetId: string | null, callback: (data: { success: boolean; error?: string }) => void): void {
+        if (!this.socket) {
+            callback({ success: false, error: 'Not connected' });
+            return;
+        }
+
+        this.socket.emit('send_message', { text, isPreset, presetId }, callback);
+    }
+
+    // Request current room state (used by lobby on mount)
+    requestRoomState(callback: (data: { success: boolean; state?: any; players?: any[]; error?: string }) => void): void {
+        if (!this.socket) {
+            callback({ success: false, error: 'Not connected' });
+            return;
+        }
+
+        this.socket.emit('request_room_state', {}, callback);
     }
 
     // Subscribe to events

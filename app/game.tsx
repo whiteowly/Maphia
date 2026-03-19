@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ChatPanel from './components/ChatPanel';
 import { useAlert } from './context/AlertContext';
 import { useGame } from './context/GameContext';
 import socketService, { Player } from './services/socketService';
@@ -16,6 +17,8 @@ export default function Game() {
 
     // State from socket
     const [timeRemaining, setTimeRemaining] = useState(settings.discussionTimeSeconds || 60);
+
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     // Set up socket listeners
     useEffect(() => {
@@ -52,6 +55,7 @@ export default function Game() {
     // Count alive and dead players
     const alivePlayers = players.filter(p => !p.isDead);
     const deadPlayers = players.filter(p => p.isDead);
+    const amIDead = players.find(p => p.id === myPlayerId)?.isDead ?? false;
 
     const handleLeave = () => {
         showAlert(
@@ -101,7 +105,7 @@ export default function Game() {
     };
 
     return (
-        <ImageBackground source={backgroundImage} style={styles.background}>
+        <ImageBackground source={backgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
             <StatusBar hidden={true} />
 
             <Pressable onPress={handleLeave} style={styles.backButton} accessibilityLabel="Leave game">
@@ -164,6 +168,23 @@ export default function Game() {
                 </View>
             </View>
 
+            {/* Chat Toggle Button */}
+            <TouchableOpacity
+                style={styles.chatToggleButton}
+                onPress={() => setIsChatOpen(prev => !prev)}
+                activeOpacity={0.7}
+            >
+                <MaterialIcons name={isChatOpen ? "close" : "chat"} size={24} color="#cabdb7" />
+                <Text style={styles.chatToggleText}>{isChatOpen ? 'Close Chat' : 'Open Chat'}</Text>
+            </TouchableOpacity>
+
+            {/* Chat Overlay */}
+            {isChatOpen && (
+                <View style={styles.chatOverlay}>
+                    <ChatPanel myPlayerId={myPlayerId} isDead={amIDead} />
+                </View>
+            )}
+
             {/* Bottom Controls */}
             <View style={styles.bottomRightContainer}>
                 <Text style={[styles.Text, { fontSize: 17, marginRight: 10 }]}>
@@ -177,7 +198,13 @@ export default function Game() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
+        width: '100%',
+        height: '100%',
+    },
+    backgroundImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     Text: {
         color: "#cabdb7",
@@ -219,6 +246,44 @@ const styles = StyleSheet.create({
         right: 16,
         alignItems: 'flex-end',
         justifyContent: 'flex-end',
+    },
+    chatToggleButton: {
+        position: 'absolute',
+        bottom: 20,
+        left: 16,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+        zIndex: 50,
+    },
+    chatToggleText: {
+        fontFamily: 'Gruesome',
+        color: '#cabdb7',
+        fontSize: 16,
+        marginLeft: 8,
+    },
+    chatOverlay: {
+        position: 'absolute',
+        bottom: 80, // Above the toggle button
+        left: 16,
+        width: 380,
+        maxWidth: '90%',
+        height: 400,
+        maxHeight: '60%',
+        zIndex: 40,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 10,
+        elevation: 10,
     },
     playersColumnsRow: {
         flexDirection: 'row',
